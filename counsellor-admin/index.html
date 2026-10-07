@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage counsellors | ZeroDepression</title>
+<meta name="description" content="Admin area for managing ZeroDepression volunteer counsellors.">
+<meta name="theme-color" content="#fffaf2">
+<link rel="canonical" href="https://www.zerodepression.org/counsellor-admin/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ZeroDepression">
+<meta property="og:title" content="Manage counsellors | ZeroDepression">
+<meta property="og:description" content="Admin area for managing ZeroDepression volunteer counsellors.">
+<meta property="og:url" content="https://www.zerodepression.org/counsellor-admin/">
+<meta property="og:image" content="https://www.zerodepression.org/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css"><link rel="stylesheet" href="/assets/css/chat.css"><meta name="robots" content="noindex, nofollow">
+<script>document.documentElement.classList.add('js')</script>
+
+
+
+</head>
+<body class="chat-page">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container nav">
+    <a class="logo" href="/" aria-label="ZeroDepression home"><img src="/assets/img/logo.webp" alt="ZeroDepression" width="908" height="357"></a>
+    <div class="nav-cta"><span class="pill">Admin</span></div>
+  </div>
+</header>
+<main id="main">
+
+<div class="inbox-wrap">
+  <section id="view-login" class="login-card" hidden aria-labelledby="login-h1">
+    <div class="form-card">
+      <h1 id="login-h1" style="font-size:1.75rem">Admin sign in</h1>
+      <p>Enter your email and we'll send you a sign-in link. Only admins can use this page.</p>
+      <form id="login-form" novalidate>
+        <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" required></div>
+        <p id="login-error" class="form-status is-error" role="alert" hidden></p>
+        <p id="login-info" class="form-status is-success" role="status" hidden></p>
+        <button id="login-btn" class="btn btn-primary" type="submit">Email me a sign-in link</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="view-admin" hidden aria-label="Manage counsellors">
+    <h1 class="sr-only">Manage counsellors</h1>
+    <div class="side-card" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+      <div><strong>Signed in as <span id="me-name"></span></strong><br><span class="fine">Admin</span></div>
+      <div class="room-actions">
+        <a class="btn-quiet" href="/counsellor/">Open my inbox</a>
+        <button id="logout-btn" class="btn-quiet" type="button">Sign out</button>
+      </div>
+    </div>
+    <div id="banner-conn-top" class="banner banner--conn" role="status" hidden>Something went wrong. Check your connection and try again.</div>
+
+    <div class="side-card" style="margin-bottom:14px">
+      <h2>Add a counsellor</h2>
+      <form id="add-form" novalidate style="display:grid;gap:10px;max-width:520px">
+        <div class="field"><label for="n-name">Name visitors will see</label><input id="n-name" type="text" maxlength="40" autocomplete="off" required></div>
+        <div class="field"><label for="n-email">Email</label><input id="n-email" type="email" autocomplete="off" required></div>
+        <div class="field"><label for="n-role">Role</label>
+          <select id="n-role"><option value="counsellor">Counsellor (answers chats)</option><option value="admin">Admin (also manages counsellors)</option></select></div>
+        <p id="add-error" class="form-status is-error" role="alert" hidden></p>
+        <p id="add-info" class="form-status is-success" role="status" hidden></p>
+        <div><button id="add-btn" class="btn btn-primary" type="submit">Add counsellor</button></div>
+      </form>
+      <p class="fine">There is no invite email. Tell them to open <strong>/counsellor/</strong> and request a sign-in link with this email address.</p>
+    </div>
+
+    <div class="side-card">
+      <h2>Counsellors <span id="count" class="fine"></span></h2>
+      <ul id="clist" class="qlist"></ul>
+    </div>
+  </section>
+</div>
+</main>
+<footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">Confidential. Admin access only.</p></div></footer>
+
+<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/admin.js" defer></script>
+</body>
+</html>

@@ -17,7 +17,7 @@
     pvName: $("#pv-name"), pvCrisis: $("#pv-crisis"), pvText: $("#pv-text"), take: $("#take-btn"), pvErr: $("#pv-error"),
     title: $("#room-title"), sub: $("#room-sub"), crisis: $("#banner-crisis"),
     log: $("#log"), composer: $("#composer"), msg: $("#msg"), send: $("#send-btn"), meta: $("#composer-meta"),
-    release: $("#release-btn"), close: $("#close-btn"), ended: $("#ended"),
+    adminLink: $("#admin-link"), release: $("#release-btn"), close: $("#close-btn"), ended: $("#ended"),
   };
 
   var cfg = window.ZD_FIREBASE_CONFIG;
@@ -97,6 +97,7 @@
   function enter(user, profile) {
     s.user = user; s.name = profile.displayName;
     el.name.textContent = s.name;
+    el.adminLink.hidden = profile.role !== "admin";
     showView("inbox");
     var beat = function () { if (!document.hidden) fb.staff.heartbeat(user.uid).then(function () { el.conn.hidden = true; }, function () { el.conn.hidden = false; }); };
     beat(); s.beatTimer = setInterval(beat, BEAT);

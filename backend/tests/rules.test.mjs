@@ -31,6 +31,7 @@ async function reset() {
     await setDoc(doc(db, 'counsellors/sarah@example.com'), { displayName: 'Sarah', active: true });
     await setDoc(doc(db, 'counsellors/tunde@example.com'), { displayName: 'Tunde', active: true });
     await setDoc(doc(db, 'counsellors/gone@example.com'), { displayName: 'Gone', active: false });
+    await setDoc(doc(db, 'counsellors/boss@example.com'), { displayName: 'Boss', active: true, role: 'admin' });
   });
 }
 
@@ -52,6 +53,10 @@ async function send(db, uid, who, body, extraChat = {}, msgOver = {}) {
   });
   return b.commit();
 }
+
+const newCounsellor = (by = 'boss@example.com', over = {}) => ({
+  displayName: 'Ife', active: true, role: 'counsellor', addedBy: by, addedAt: serverTimestamp(), ...over,
+});
 
 const V = 'visitor-1', V2 = 'visitor-2';
 const mkChat = async (uid = V) => assertSucceeds(setDoc(doc(anon(uid), 'chats', uid), newChat(uid)));
@@ -198,12 +203,72 @@ await t('counsellor can read only their own allow-list entry', async () => {
   if (s.data().displayName !== 'Sarah') throw new Error('wrong data');
   await assertFails(getDoc(doc(d, 'counsellors', 'tunde@example.com')));
 });
-await t('nobody can list or edit the allow-list from a client', async () => {
+await t('plain counsellors and visitors cannot list or edit the allow-list', async () => {
   const d = staff('c-sarah', 'sarah@example.com');
   await assertFails(getDocs(collection(d, 'counsellors')));
-  await assertFails(setDoc(doc(d, 'counsellors', 'sarah@example.com'), { displayName: 'Boss', active: true }));
-  await assertFails(setDoc(doc(anon('v11'), 'counsellors', 'v11@example.com'), { displayName: 'Me', active: true }));
+  await assertFails(setDoc(doc(d, 'counsellors', 'sarah@example.com'), { displayName: 'Boss', active: true, role: 'admin' }));
+  await assertFails(updateDoc(doc(d, 'counsellors', 'sarah@example.com'), { role: 'admin' }));
+  await assertFails(setDoc(doc(d, 'counsellors', 'new@example.com'), newCounsellor('sarah@example.com')));
+  await assertFails(setDoc(doc(anon('v11'), 'counsellors', 'v11@example.com'), newCounsellor('v11@example.com')));
+  await assertFails(getDocs(collection(guest(), 'counsellors')));
 });
+
+// ============================================================ admin: managing counsellors
+const admin = () => staff('c-boss', 'boss@example.com');
+await reset();
+await t('an admin can list the counsellors', async () => {
+  const s = await assertSucceeds(getDocs(collection(admin(), 'counsellors')));
+  if (s.size !== 4) throw new Error('expected 4, got ' + s.size);
+});
+await t('an admin can read any counsellor entry', () => assertSucceeds(getDoc(doc(admin(), 'counsellors', 'tunde@example.com'))));
+await t('an admin can add a counsellor or another admin', async () => {
+  await assertSucceeds(setDoc(doc(admin(), 'counsellors', 'ife@example.com'), newCounsellor()));
+  await assertSucceeds(setDoc(doc(admin(), 'counsellors', 'ada@example.com'), newCounsellor('boss@example.com', { role: 'admin' })));
+});
+await t('the added counsellor can then use the inbox', async () => {
+  await assertSucceeds(getDocs(query(collection(staff('c-ife', 'ife@example.com'), 'chats'), where('status', '==', 'waiting'))));
+});
+await t('add rejects bad emails, bad roles, bad names, forged addedBy, extra fields', async () => {
+  const d = admin();
+  await assertFails(setDoc(doc(d, 'counsellors', 'not-an-email'), newCounsellor()));
+  await assertFails(setDoc(doc(d, 'counsellors', 'Mixed@Example.com'), newCounsellor()));
+  await assertFails(setDoc(doc(d, 'counsellors', 'x@example.com'), newCounsellor('boss@example.com', { role: 'owner' })));
+  await assertFails(setDoc(doc(d, 'counsellors', 'x@example.com'), newCounsellor('boss@example.com', { displayName: '' })));
+  await assertFails(setDoc(doc(d, 'counsellors', 'x@example.com'), newCounsellor('boss@example.com', { displayName: 'x'.repeat(41) })));
+  await assertFails(setDoc(doc(d, 'counsellors', 'x@example.com'), newCounsellor('someone@else.com')));
+  await assertFails(setDoc(doc(d, 'counsellors', 'x@example.com'), newCounsellor('boss@example.com', { active: false })));
+  await assertFails(setDoc(doc(d, 'counsellors', 'x@example.com'), newCounsellor('boss@example.com', { extra: 1 })));
+});
+await t('an admin can rename, deactivate, reactivate and promote others', async () => {
+  const d = admin();
+  await assertSucceeds(updateDoc(doc(d, 'counsellors', 'tunde@example.com'), { displayName: 'Tunde O.' }));
+  await assertSucceeds(updateDoc(doc(d, 'counsellors', 'tunde@example.com'), { active: false }));
+  await assertSucceeds(updateDoc(doc(d, 'counsellors', 'tunde@example.com'), { active: true }));
+  await assertSucceeds(updateDoc(doc(d, 'counsellors', 'sarah@example.com'), { role: 'admin' }));
+});
+await t('a deactivated counsellor loses inbox access immediately', async () => {
+  await assertSucceeds(updateDoc(doc(admin(), 'counsellors', 'tunde@example.com'), { active: false }));
+  await assertFails(getDocs(query(collection(staff('c-tunde', 'tunde@example.com'), 'chats'), where('status', '==', 'waiting'))));
+});
+await t('an admin cannot deactivate or demote themselves, but can rename themselves', async () => {
+  const d = admin();
+  await assertFails(updateDoc(doc(d, 'counsellors', 'boss@example.com'), { active: false }));
+  await assertFails(updateDoc(doc(d, 'counsellors', 'boss@example.com'), { role: 'counsellor' }));
+  await assertSucceeds(updateDoc(doc(d, 'counsellors', 'boss@example.com'), { displayName: 'The Boss' }));
+});
+await t('update cannot touch addedBy/addedAt, set a bad role, or delete the doc', async () => {
+  const d = admin();
+  await assertFails(updateDoc(doc(d, 'counsellors', 'sarah@example.com'), { addedBy: 'x@y.com' }));
+  await assertFails(updateDoc(doc(d, 'counsellors', 'sarah@example.com'), { role: 'owner' }));
+  await assertFails(deleteDoc(doc(d, 'counsellors', 'sarah@example.com')));
+});
+await t('a deactivated or unverified admin has no admin powers', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => updateDoc(doc(ctx.firestore(), 'counsellors/boss@example.com'), { active: false }));
+  await assertFails(getDocs(collection(admin(), 'counsellors')));
+  await env.withSecurityRulesDisabled(async (ctx) => updateDoc(doc(ctx.firestore(), 'counsellors/boss@example.com'), { active: true }));
+  await assertFails(getDocs(collection(staff('c-boss', 'boss@example.com', false), 'counsellors')));
+});
+await reset();
 await t('visitors and the public can see who is online (timestamps only)', async () => {
   await env.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'presence', 'c-sarah'), { lastSeen: Timestamp.now() }));
   await assertSucceeds(getDocs(collection(guest(), 'presence')));

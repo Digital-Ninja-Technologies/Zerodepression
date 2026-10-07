@@ -376,6 +376,12 @@ p {
   flex: none;
 }
 
+.logo img {
+  display: block;
+  height: 50px;
+  width: auto;
+}
+
 .logo b {
   font-weight: 800;
 }
@@ -592,6 +598,14 @@ p {
 .hero-art img {
   width: 100%;
   filter: drop-shadow(0 30px 40px rgba(16, 33, 63, 0.18));
+}
+
+.hero-art--photo img {
+  display: block;
+  height: auto;
+  border-radius: 32px;
+  filter: none;
+  box-shadow: 0 30px 40px rgba(16, 33, 63, 0.18);
 }
 
 .float-card {
