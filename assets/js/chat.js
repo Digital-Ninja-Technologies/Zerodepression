@@ -296,7 +296,7 @@
     unsubAll();
     try { sessionStorage.clear(); localStorage.removeItem("zd_staff_email"); } catch (e) { /* ignore */ }
     if (fb) { fb.visitor.leave().catch(function () {}); }
-    window.location.replace("https://www.google.com/");
+    window.location.replace("/");
   }
   el.quick.addEventListener("click", quickExit);
   var lastEsc = 0;
