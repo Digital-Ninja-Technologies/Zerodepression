@@ -1,0 +1,70 @@
+
+body {
+  background-color: #f6f8fb;
+}
+header{
+  height: initial;
+}
+.hero {
+    width: 100%;
+    height: 300px;
+    background: rgba(0, 0, 0, 0.08) url(../assets/blog\ bg.webp) no-repeat center;
+    background-size: cover;
+    background-blend-mode: multiply;
+    text-align: center;
+    padding-top: 100px;
+  }
+
+  .hero h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    color: #ffa500;
+  }
+  
+  .hero h3 {
+    font-size: 2rem;
+    color: #fff;
+    margin-top: -2px;
+  }
+
+  .blog {
+    width: 90%;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-rows: auto;
+    gap: 10px;
+    border: 200px;
+    background-color: unset;
+  }
+  
+  .card {
+    min-width: unset;
+  }
+  .card_3 img,
+  .card_2 img,
+  .card_1 img {
+    object-fit: cover;
+  }
+  
+  .card_3,
+  .card_1,
+  .card_2 {
+    height: 200px;
+  }
+  
+  .card-body {
+    margin-top: 0;
+    background: white;
+    margin-bottom: 30px;
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .card-body p {
+    opacity: 0.6;
+  }
+  
+  .hide {
+    display: none;
+  }
