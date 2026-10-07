@@ -53,7 +53,7 @@
     if (!email) { loginMessage("error", "Please enter your email address."); return; }
     if (fb.staff.isLink(location.href)) { finishLink(email); return; }
     loginMessage("", ""); el.loginBtn.disabled = true;
-    fb.staff.sendLink(email, location.origin + "/counsellor-admin/").then(function () {
+    fb.staff.sendLink(email, location.origin + "/admin-dashboard/").then(function () {
       try { localStorage.setItem(EMAIL_KEY, email); } catch (e2) { /* ignore */ }
       loginMessage("info", "Check your email for a sign-in link, then open it on this device. It can take a minute.");
     }, function (err) { loginMessage("error", errText(err)); }).then(function () { el.loginBtn.disabled = false; });

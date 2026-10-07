@@ -49,6 +49,16 @@
       "source": "/admin/(.*)",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/counsellor-admin",
+      "destination": "/admin-dashboard/",
+      "permanent": false
+    },
+    {
+      "source": "/counsellor-admin/(.*)",
+      "destination": "/admin-dashboard/",
+      "permanent": false
     }
   ]
 }
