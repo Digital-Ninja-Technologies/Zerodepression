@@ -1,0 +1,64 @@
+{
+  "redirects": [
+    {
+      "source": "/chatFlow1",
+      "destination": "/talk/",
+      "permanent": false
+    },
+    {
+      "source": "/chatFlow1/(.*)",
+      "destination": "/talk/",
+      "permanent": false
+    },
+    {
+      "source": "/chatFlow2",
+      "destination": "/talk/",
+      "permanent": false
+    },
+    {
+      "source": "/chatFlow2/(.*)",
+      "destination": "/talk/",
+      "permanent": false
+    },
+    {
+      "source": "/chatFlow3",
+      "destination": "/talk/",
+      "permanent": false
+    },
+    {
+      "source": "/chatFlow3/(.*)",
+      "destination": "/talk/",
+      "permanent": false
+    },
+    {
+      "source": "/counsellor",
+      "destination": "/#counsellors",
+      "permanent": false
+    },
+    {
+      "source": "/counsellor/(.*)",
+      "destination": "/#counsellors",
+      "permanent": false
+    },
+    {
+      "source": "/gallery",
+      "destination": "/about-us/",
+      "permanent": false
+    },
+    {
+      "source": "/gallery/(.*)",
+      "destination": "/about-us/",
+      "permanent": false
+    },
+    {
+      "source": "/admin",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "/",
+      "permanent": false
+    }
+  ]
+}
