@@ -1,80 +1,67 @@
-# Anonymous counselling chat
+# Anonymous counselling chat (Firebase)
 
 Visitors chat anonymously at `/chat/`. Volunteer counsellors answer from `/counsellor/`.
+Runs on Firebase **Authentication + Cloud Firestore** only. No Cloud Functions, so the free **Spark** plan is enough.
 
 ## How it works
 
-- **Backend:** Postgres functions in the Supabase project **ona** (`knffcabxyazookxchruq`), defined in
-  [`zd_chat.sql`](zd_chat.sql). All data is in a private `zd_chat` schema that the REST API cannot read;
-  the site only calls the 13 `public.zd_*` functions, each of which checks a secret.
-- **Visitors** get a random per-chat secret when they start (kept in `sessionStorage`, stored hashed).
-  No account, cookie, or analytics on the chat pages.
-- **Counsellors** sign in with their email plus a personal access code (stored hashed, sessions last
-  12 hours, 8 wrong attempts locks that email for 15 minutes).
-- **Transport:** the browsers poll every ~2 seconds. No websockets, so it works on weak connections.
-- **Frontend:** `assets/js/zd-api.js` (client), `chat.js` (visitor), `counsellor.js` (inbox),
-  `assets/css/chat.css`. The key in `zd-api.js` is the project's public anon key, which is meant to
-  be public.
+| Piece | What it does |
+| --- | --- |
+| **Visitors** | Sign in *anonymously* (no email, no account). The anonymous ID lives only in that browser tab. Each visitor gets exactly one chat document, `chats/{their uid}`. |
+| **Counsellors** | Sign in with an **email link** (no password). They are let in only if their *verified* email has an active entry in the `counsellors` collection. |
+| **Security** | [`firestore.rules`](firestore.rules) is the whole security model: visitors can only touch their own chat, only approved counsellors can see the queue, only one counsellor can take a chat, nothing can be deleted by a client, and messages can't be forged. 62 automated tests cover it. |
+| **Live updates** | Firestore pushes new messages instantly (no polling). |
+| **Retention** | Every chat and message carries an `expireAt` date 7 days out; a Firestore TTL policy deletes them automatically. |
+| **Frontend** | `assets/js/chat.js` (visitor), `counsellor.js` (inbox), `zd-config.js` (your project's public config), and `assets/js/vendor/zd-firebase.js` (the Firebase SDK, bundled from `src/zd-firebase.js` so the site loads nothing from Google's CDN). |
 
-## Add or remove a counsellor
+## One-time setup (about 10 minutes, in the Firebase console)
 
-Run in the Supabase SQL editor for the project (the `zd_chat` schema is not reachable from the API):
+Until step 1 is done the chat pages show a safe "chat isn't available yet, please call" message.
 
-```sql
--- Add (or reset the code of) a counsellor. Prints their one-time access code: send it to them privately.
-select zd_chat.create_counsellor('name@example.com', 'Name shown to visitors');
+1. **Add the web config.** Project settings → *Your apps* → add a **Web app** → copy the `firebaseConfig`
+   values into [`assets/js/zd-config.js`](../assets/js/zd-config.js). (These values are public by design.)
+2. **Authentication → Sign-in method**
+   - Enable **Anonymous**.
+   - Enable **Email/Password**, and inside it also turn on **Email link (passwordless sign-in)**.
+   - **Settings → Authorized domains:** add every domain the site is served from (for example
+     `zerodepression.vercel.app`, your custom domain, and any Vercel preview domain you test on). Email-link
+     sign-in is refused on domains that aren't listed.
+3. **Firestore Database → Create database** (production mode, the region closest to your users).
+4. **Publish the rules.** Firestore → *Rules* → paste the whole of [`firestore.rules`](firestore.rules) → **Publish**.
+   (Or, with the Firebase CLI: `firebase deploy --only firestore:rules` from this folder.)
+5. **Turn on automatic deletion.** Firestore → *Time to live* (under *Indexes*) → create two TTL policies:
+   - collection group **`chats`**, timestamp field **`expireAt`**
+   - collection group **`messages`**, timestamp field **`expireAt`**
 
--- Remove access
-update zd_chat.counsellors set active = false where email = 'name@example.com';
+   Without these the site's "messages are deleted after about 7 days" promise is not true.
+6. **Add your counsellors.** Firestore → *Start collection* **`counsellors`**. For each person add a document
+   whose **Document ID is their email in lowercase** (e.g. `sarah@example.com`) with fields:
+   `displayName` (string, the name visitors see) and `active` (boolean, `true`).
+   To remove someone, set `active` to `false` (or delete the document).
+7. **Try it.** Open `/counsellor/` and sign in with a counsellor email (check that inbox for the link, open it
+   on the same device). In another browser open `/chat/`, start a chat, and exchange messages.
+
+## Run the tests
+
+```bash
+cd backend
+npm install
+npm run test:rules    # 62 security-rule tests against the Firestore emulator (needs Java 11+)
+npm run build:sdk     # rebuild assets/js/vendor/zd-firebase.js after editing src/zd-firebase.js
 ```
-
-Counsellors sign in at `/counsellor/` with that email and code. Resetting a code signs out their old session.
-
-## Go-live checklist
-
-1. Add at least one counsellor (above). With nobody signed in, visitors can still queue and see the call button.
-2. Install the 7-day purge. The chat tells visitors that finished chats are deleted after 7 days,
-   so this **must** be in place before launch. It contains `DELETE` statements, so Supabase's SQL
-   tooling asks for confirmation. Run `zd_chat._purge()` from `zd_chat.sql` in the SQL editor
-   (it is already in that file). The housekeeping job calls it automatically once it exists.
-   Check with: `select to_regprocedure('zd_chat._purge()');` (should not be null).
-3. Do a live test: open `/chat/` in one browser and `/counsellor/` in another and exchange messages.
-4. Tell counsellors to keep `/counsellor/` open and click **Turn on alerts** (sound plus desktop notification).
 
 ## What it does and doesn't do
 
-- Crisis keywords (suicide, "want to die", self-harm...) flag a chat as **May be at risk**, move it to the
+- **Crisis keywords** (suicide, "want to die", self-harm...) flag a chat as *May be at risk*, move it to the
   top of the queue, and show the visitor 112 and the free line. This is a **keyword heuristic, not a
-  classifier**: it will miss things, and a human must read every chat.
-- Chats are deleted 7 days after they end. Abandoned and idle chats close automatically.
-- A salted hash of the visitor's IP is kept for up to 2 hours purely to limit abuse (6 new chats per hour).
-- Counsellors only hear about new chats while their inbox tab is open. There is no push when it is closed.
+  classifier**: it runs in the visitor's browser, will miss things, and a human must read every chat.
+- Counsellors only hear about new chats while their inbox tab is open (sound + optional desktop notification).
+- The queue only shows visitors who are still on the page (they send a heartbeat every 25 seconds).
+  Abandoned chats are hidden, not deleted, and are removed by the TTL policy.
+- **Abuse limits are light.** Each visitor can have one chat per anonymous identity and can send one message per
+  0.6 seconds, up to 400 per chat. Firebase throttles anonymous sign-ups per network. There is no server-side
+  per-IP limit. If abuse appears, add Firebase **App Check**, or move to the Blaze plan and add Cloud Functions.
+- Sending an email link to an address needs only that address, so someone could make Firebase email a
+  counsellor a sign-in link. Only a verified, approved email can ever *use* one.
 - There is no AI in the loop: every reply is written by a human volunteer.
 - Nobody moderates counsellors' messages. Decide on a volunteer code of conduct and supervision.
-
-## Operating notes
-
-- Supabase free-tier projects pause after a week of inactivity. Keep ona active, or upgrade.
-- The chat shares ona's database. Its tables and functions are prefixed `zd_` / live in `zd_chat`,
-  and nothing in ona's own tables or settings was changed.
-- To rotate the public key or move to another project, change `BASE` and `KEY` in `assets/js/zd-api.js`.
-
-## Installing the purge on ona (one-off)
-
-Run this in the Supabase SQL editor for ona (the app's database tooling blocks `DELETE`-containing SQL
-without an interactive confirmation, so it has to be run by a person):
-
-```sql
-create or replace function zd_chat._purge() returns void
-language plpgsql security definer set search_path = ''
-as $fn$
-begin
-  delete from zd_chat.chats where status = 'closed' and closed_at < now() - interval '7 days';
-  delete from zd_chat.sessions where expires_at < now() - interval '1 day';
-  delete from zd_chat.rate where at < now() - interval '2 hours';
-  delete from zd_chat.attempts where at < now() - interval '1 day';
-end
-$fn$;
-
-revoke all on function zd_chat._purge() from public, anon, authenticated;
-```

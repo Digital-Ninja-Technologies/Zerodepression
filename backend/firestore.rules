@@ -1,0 +1,205 @@
+rules_version = '2';
+
+// ZeroDepression anonymous counselling chat.
+//
+// Model
+//   chats/{uid}                 one chat per anonymous visitor; the doc id IS the visitor's anonymous uid
+//   chats/{uid}/messages/{id}   the conversation (sender: 'user' | 'counsellor')
+//   counsellors/{email}         invite-only allow-list, managed in the Firebase console (no client writes)
+//   presence/{uid}              heartbeat written by signed-in counsellors so visitors can see "online now"
+//
+// Visitors sign in anonymously (no email, no account). Counsellors sign in with an email link, and are
+// let in only if their VERIFIED email has an active doc in /counsellors. Nothing can be deleted by clients;
+// a TTL policy on `expireAt` removes old chats and messages.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------ identity helpers
+    function signedIn() { return request.auth != null; }
+
+    function isAnon() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function hasVerifiedEmail() {
+      return signedIn() && 'email' in request.auth.token && request.auth.token.email_verified == true;
+    }
+
+    function counsellorPath() {
+      return /databases/$(database)/documents/counsellors/$(request.auth.token.email.lower());
+    }
+
+    function isCounsellor() {
+      return hasVerifiedEmail() && exists(counsellorPath()) && get(counsellorPath()).data.active == true;
+    }
+
+    // ------------------------------------------------------------------ validation helpers
+    function boundedExpiry(t) {
+      return t is timestamp && t > request.time && t <= request.time + duration.value(8, 'd');
+    }
+
+    // fields that changed between the stored and the incoming document
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // ------------------------------------------------------------------ allow-list
+    match /counsellors/{email} {
+      // A counsellor may read only their own entry (to learn their display name). No client writes.
+      allow get: if hasVerifiedEmail() && request.auth.token.email.lower() == email;
+      allow list, write: if false;
+    }
+
+    // ------------------------------------------------------------------ presence
+    match /presence/{uid} {
+      allow read: if true;   // contains only a timestamp keyed by a random uid
+      allow create, update: if isCounsellor() && uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['lastSeen'])
+        && request.resource.data.lastSeen == request.time;
+      allow delete: if isCounsellor() && uid == request.auth.uid;
+    }
+
+    // ------------------------------------------------------------------ chats
+    match /chats/{chatId} {
+
+      function isOwner() { return isAnon() && resource.data.visitorUid == request.auth.uid; }
+      function mine() { return isCounsellor() && resource.data.counsellorUid == request.auth.uid; }
+
+      // Visitors read their own chat. Counsellors see waiting chats (the queue) and the chats they took.
+      allow read: if isOwner()
+        || (isCounsellor() && (resource.data.status == 'waiting' || resource.data.counsellorUid == request.auth.uid));
+
+      // One chat per anonymous identity (doc id == uid), so spamming needs a new anonymous account each time.
+      allow create: if isAnon() && chatId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+             'visitorUid', 'nickname', 'status', 'counsellorUid', 'counsellorName', 'crisis', 'preview',
+             'msgCount', 'createdAt', 'lastActivity', 'visitorSeen', 'lastUserMsgAt',
+             'claimedAt', 'closedAt', 'closedBy', 'expireAt'])
+        && request.resource.data.keys().hasAll([
+             'visitorUid', 'nickname', 'status', 'counsellorUid', 'counsellorName', 'crisis', 'preview',
+             'msgCount', 'createdAt', 'lastActivity', 'visitorSeen', 'lastUserMsgAt',
+             'claimedAt', 'closedAt', 'closedBy', 'expireAt'])
+        && request.resource.data.visitorUid == request.auth.uid
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() >= 1 && request.resource.data.nickname.size() <= 24
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.counsellorUid == null
+        && request.resource.data.counsellorName == null
+        && request.resource.data.crisis == false
+        && request.resource.data.preview == ''
+        && request.resource.data.msgCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastActivity == request.time
+        && request.resource.data.visitorSeen == request.time
+        && request.resource.data.lastUserMsgAt == request.time
+        && request.resource.data.claimedAt == null
+        && request.resource.data.closedAt == null
+        && request.resource.data.closedBy == null
+        && boundedExpiry(request.resource.data.expireAt);
+
+      allow update: if
+
+        // ---- visitor: keep-alive
+        (isOwner() && resource.data.status != 'closed'
+          && changed().hasOnly(['visitorSeen'])
+          && request.resource.data.visitorSeen == request.time)
+
+        // ---- visitor: send a message (batched with the message document)
+        || (isOwner() && resource.data.status != 'closed'
+          && changed().hasOnly(['msgCount', 'lastActivity', 'lastUserMsgAt', 'crisis', 'preview', 'visitorSeen', 'expireAt'])
+          && request.resource.data.msgCount == resource.data.msgCount + 1
+          && request.resource.data.msgCount <= 400
+          && request.resource.data.lastActivity == request.time
+          && request.resource.data.lastUserMsgAt == request.time
+          && request.resource.data.visitorSeen == request.time
+          && request.time > resource.data.lastUserMsgAt + duration.value(600, 'ms')   // throttle
+          && (request.resource.data.crisis == resource.data.crisis || request.resource.data.crisis == true)
+          && (request.resource.data.preview == resource.data.preview
+              || (resource.data.preview == '' && request.resource.data.preview is string
+                  && request.resource.data.preview.size() <= 140))
+          && boundedExpiry(request.resource.data.expireAt))
+
+        // ---- visitor: end the chat
+        || (isOwner() && resource.data.status != 'closed'
+          && changed().hasOnly(['status', 'closedAt', 'closedBy', 'lastActivity', 'expireAt'])
+          && request.resource.data.status == 'closed'
+          && request.resource.data.closedBy == 'user'
+          && request.resource.data.closedAt == request.time
+          && request.resource.data.lastActivity == request.time
+          && boundedExpiry(request.resource.data.expireAt))
+
+        // ---- counsellor: take a waiting chat (only one writer can win: status must still be 'waiting')
+        || (isCounsellor() && resource.data.status == 'waiting'
+          && changed().hasOnly(['status', 'counsellorUid', 'counsellorName', 'claimedAt', 'lastActivity'])
+          && request.resource.data.status == 'active'
+          && request.resource.data.counsellorUid == request.auth.uid
+          && request.resource.data.counsellorName == get(counsellorPath()).data.displayName
+          && request.resource.data.claimedAt == request.time
+          && request.resource.data.lastActivity == request.time)
+
+        // ---- counsellor: reply (batched with the message document)
+        || (mine() && resource.data.status == 'active'
+          && changed().hasOnly(['msgCount', 'lastActivity'])
+          && request.resource.data.msgCount == resource.data.msgCount + 1
+          && request.resource.data.msgCount <= 400
+          && request.resource.data.lastActivity == request.time)
+
+        // ---- counsellor: hand the chat back to the queue
+        || (mine() && resource.data.status == 'active'
+          && changed().hasOnly(['status', 'counsellorUid', 'counsellorName', 'claimedAt', 'lastActivity'])
+          && request.resource.data.status == 'waiting'
+          && request.resource.data.counsellorUid == null
+          && request.resource.data.counsellorName == null
+          && request.resource.data.claimedAt == null
+          && request.resource.data.lastActivity == request.time)
+
+        // ---- counsellor: end the chat
+        || (mine() && resource.data.status == 'active'
+          && changed().hasOnly(['status', 'closedAt', 'closedBy', 'lastActivity', 'expireAt'])
+          && request.resource.data.status == 'closed'
+          && request.resource.data.closedBy == 'counsellor'
+          && request.resource.data.closedAt == request.time
+          && request.resource.data.lastActivity == request.time
+          && boundedExpiry(request.resource.data.expireAt));
+
+      allow delete: if false;
+
+      // -------------------------------------------------------------- messages
+      match /messages/{msgId} {
+        function chatDoc() { return get(/databases/$(database)/documents/chats/$(chatId)).data; }
+        function chatAfter() { return getAfter(/databases/$(database)/documents/chats/$(chatId)).data; }
+
+        function validBody() {
+          return request.resource.data.body is string
+            && request.resource.data.body.size() >= 1 && request.resource.data.body.size() <= 2000;
+        }
+
+        function shapeOk() {
+          return request.resource.data.keys().hasOnly(['sender', 'body', 'createdAt', 'expireAt'])
+            && request.resource.data.keys().hasAll(['sender', 'body', 'createdAt', 'expireAt'])
+            && validBody()
+            && request.resource.data.createdAt == request.time
+            && boundedExpiry(request.resource.data.expireAt)
+            // must be written in the same batch as the chat's msgCount increment
+            && chatAfter().msgCount == chatDoc().msgCount + 1;
+        }
+
+        allow read: if (isAnon() && request.auth.uid == chatId)
+          || (isCounsellor() && chatDoc().counsellorUid == request.auth.uid);
+
+        allow create: if
+          // visitor message
+          (isAnon() && request.auth.uid == chatId && chatDoc().status != 'closed'
+            && request.resource.data.sender == 'user' && shapeOk())
+          // counsellor reply
+          || (isCounsellor() && chatDoc().counsellorUid == request.auth.uid && chatDoc().status == 'active'
+            && request.resource.data.sender == 'counsellor' && shapeOk());
+
+        allow update, delete: if false;
+      }
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

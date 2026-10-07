@@ -1,0 +1,16 @@
+{
+  "name": "zerodepression-chat-backend",
+  "private": true,
+  "description": "Firestore rules, tests and the browser SDK bundle for the anonymous counselling chat",
+  "type": "module",
+  "scripts": {
+    "test:rules": "firebase emulators:exec --only firestore --project demo-zd-rules \"node tests/rules.test.mjs\"",
+    "build:sdk": "node build-sdk.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "esbuild": "^0.25.0",
+    "firebase": "^12.0.0",
+    "firebase-tools": "^15.0.0"
+  }
+}

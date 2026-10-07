@@ -40,12 +40,12 @@
   <section id="view-login" class="login-card" hidden aria-labelledby="login-h1">
     <div class="form-card">
       <h1 id="login-h1" style="font-size:1.75rem">Counsellor sign in</h1>
-      <p>Sign in with your email and the personal access code you were given.</p>
+      <p>Enter your email and we'll send you a sign-in link. No password needed. Only approved counsellor emails can get in.</p>
       <form id="login-form" novalidate>
-        <div class="field"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="username" required></div>
-        <div class="field"><label for="c-code">Access code</label><input id="c-code" type="password" autocomplete="current-password" required placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"></div>
+        <div class="field"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email" required></div>
         <p id="login-error" class="form-status is-error" role="alert" hidden></p>
-        <button id="login-btn" class="btn btn-primary" type="submit">Sign in</button>
+        <p id="login-info" class="form-status is-success" role="status" hidden></p>
+        <button id="login-btn" class="btn btn-primary" type="submit">Email me a sign-in link</button>
       </form>
     </div>
   </section>
@@ -115,6 +115,6 @@
 </main>
 <footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">Confidential. Do not share what visitors tell you outside this inbox.</p></div></footer>
 
-<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-api.js" defer></script><script src="/assets/js/counsellor.js" defer></script>
+<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/counsellor.js" defer></script>
 </body>
 </html>
