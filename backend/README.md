@@ -1,6 +1,6 @@
 # Anonymous counselling chat (Firebase)
 
-Visitors chat anonymously at `/chat/`. Volunteer counsellors answer from `/counsellor/`.
+Visitors chat anonymously at `/chat/`. Volunteer counsellors answer from `/counsellor/`; admins manage them at `/counsellor-admin/`.
 Runs on Firebase **Authentication + Cloud Firestore** only. No Cloud Functions, so the free **Spark** plan is enough.
 
 ## How it works
@@ -9,7 +9,7 @@ Runs on Firebase **Authentication + Cloud Firestore** only. No Cloud Functions, 
 | --- | --- |
 | **Visitors** | Sign in *anonymously* (no email, no account). The anonymous ID lives only in that browser tab. Each visitor gets exactly one chat document, `chats/{their uid}`. |
 | **Counsellors** | Sign in with an **email link** (no password). They are let in only if their *verified* email has an active entry in the `counsellors` collection. |
-| **Security** | [`firestore.rules`](firestore.rules) is the whole security model: visitors can only touch their own chat, only approved counsellors can see the queue, only one counsellor can take a chat, nothing can be deleted by a client, and messages can't be forged. 62 automated tests cover it. |
+| **Security** | [`firestore.rules`](firestore.rules) is the whole security model: visitors can only touch their own chat, only approved counsellors can see the queue, only one counsellor can take a chat, nothing can be deleted by a client, and messages can't be forged. 72 automated tests cover it. |
 | **Live updates** | Firestore pushes new messages instantly (no polling). |
 | **Retention** | Every chat and message carries an `expireAt` date 7 days out; a Firestore TTL policy deletes them automatically. |
 | **Frontend** | `assets/js/chat.js` (visitor), `counsellor.js` (inbox), `zd-config.js` (your project's public config), and `assets/js/vendor/zd-firebase.js` (the Firebase SDK, bundled from `src/zd-firebase.js` so the site loads nothing from Google's CDN). |
@@ -34,10 +34,10 @@ Until step 1 is done the chat pages show a safe "chat isn't available yet, pleas
    - collection group **`messages`**, timestamp field **`expireAt`**
 
    Without these the site's "messages are deleted after about 7 days" promise is not true.
-6. **Add your counsellors.** Firestore → *Start collection* **`counsellors`**. For each person add a document
-   whose **Document ID is their email in lowercase** (e.g. `sarah@example.com`) with fields:
-   `displayName` (string, the name visitors see) and `active` (boolean, `true`).
-   To remove someone, set `active` to `false` (or delete the document).
+6. **Create the first admin.** Firestore → *Start collection* **`counsellors`**. Add a document whose **Document ID is
+   your email in lowercase** with fields `displayName` (string), `active` (boolean, `true`) and `role` (string, `admin`).
+   After that, sign in at `/counsellor-admin/` to add, rename, deactivate and promote counsellors; no more console work.
+   (Counsellors added there get `role: counsellor`. Older docs with no `role` are treated as plain counsellors.)
 7. **Try it.** Open `/counsellor/` and sign in with a counsellor email (check that inbox for the link, open it
    on the same device). In another browser open `/chat/`, start a chat, and exchange messages.
 
@@ -46,7 +46,7 @@ Until step 1 is done the chat pages show a safe "chat isn't available yet, pleas
 ```bash
 cd backend
 npm install
-npm run test:rules    # 62 security-rule tests against the Firestore emulator (needs Java 11+)
+npm run test:rules    # 72 security-rule tests against the Firestore emulator (needs Java 11+)
 npm run build:sdk     # rebuild assets/js/vendor/zd-firebase.js after editing src/zd-firebase.js
 ```
 

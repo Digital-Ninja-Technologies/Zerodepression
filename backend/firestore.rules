@@ -5,7 +5,7 @@ rules_version = '2';
 // Model
 //   chats/{uid}                 one chat per anonymous visitor; the doc id IS the visitor's anonymous uid
 //   chats/{uid}/messages/{id}   the conversation (sender: 'user' | 'counsellor')
-//   counsellors/{email}         invite-only allow-list, managed in the Firebase console (no client writes)
+//   counsellors/{email}         invite-only allow-list, managed by admins in /counsellor-admin/ (role: 'admin')
 //   presence/{uid}              heartbeat written by signed-in counsellors so visitors can see "online now"
 //
 // Visitors sign in anonymously (no email, no account). Counsellors sign in with an email link, and are
@@ -33,6 +33,12 @@ service cloud.firestore {
       return hasVerifiedEmail() && exists(counsellorPath()) && get(counsellorPath()).data.active == true;
     }
 
+    // Admins are counsellors whose allow-list doc has role == 'admin'. Docs without a role are plain counsellors.
+    // The first admin is created by hand in the Firebase console.
+    function isAdmin() {
+      return isCounsellor() && get(counsellorPath()).data.get('role', 'counsellor') == 'admin';
+    }
+
     // ------------------------------------------------------------------ validation helpers
     function boundedExpiry(t) {
       return t is timestamp && t > request.time && t <= request.time + duration.value(8, 'd');
@@ -43,9 +49,34 @@ service cloud.firestore {
 
     // ------------------------------------------------------------------ allow-list
     match /counsellors/{email} {
-      // A counsellor may read only their own entry (to learn their display name). No client writes.
-      allow get: if hasVerifiedEmail() && request.auth.token.email.lower() == email;
-      allow list, write: if false;
+      function validRole(r) { return r == 'counsellor' || r == 'admin'; }
+      function validName(n) { return n is string && n.size() >= 1 && n.size() <= 40; }
+
+      // A counsellor may read their own entry (display name, role). Admins may read the whole list.
+      allow get: if (hasVerifiedEmail() && request.auth.token.email.lower() == email) || isAdmin();
+      allow list: if isAdmin();
+
+      // Admins add counsellors. The doc id is the lowercase email address.
+      allow create: if isAdmin()
+        && email == email.lower() && email.matches('^[^@/\\s]+@[^@/\\s]+\\.[^@/\\s]+$') && email.size() <= 254
+        && request.resource.data.keys().hasOnly(['displayName', 'active', 'role', 'addedBy', 'addedAt'])
+        && request.resource.data.keys().hasAll(['displayName', 'active', 'role', 'addedBy', 'addedAt'])
+        && validName(request.resource.data.displayName)
+        && request.resource.data.active == true
+        && validRole(request.resource.data.role)
+        && request.resource.data.addedBy == request.auth.token.email.lower()
+        && request.resource.data.addedAt == request.time;
+
+      // Admins rename, deactivate/reactivate and change the role. They cannot change their own active flag or
+      // role (so the last admin can't lock everyone out). Nothing is ever deleted; deactivate instead.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'active', 'role'])
+        && validName(request.resource.data.displayName)
+        && request.resource.data.active is bool
+        && validRole(request.resource.data.get('role', 'counsellor'))
+        && (email != request.auth.token.email.lower()
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName']));
+      allow delete: if false;
     }
 
     // ------------------------------------------------------------------ presence

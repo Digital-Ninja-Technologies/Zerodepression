@@ -119,7 +119,8 @@ function init(config) {
     async profile(email) {
       try {
         const s = await getDoc(doc(db, 'counsellors', email));
-        return s.exists() && s.data().active === true ? { displayName: s.data().displayName } : null;
+        return s.exists() && s.data().active === true
+          ? { displayName: s.data().displayName, role: s.data().role === 'admin' ? 'admin' : 'counsellor' } : null;
       } catch (e) { return null; }
     },
 
@@ -144,7 +145,16 @@ function init(config) {
     }),
   };
 
-  return { visitor, staff, ms };
+  // ------------------------------------------------------------------ admin (role 'admin' in /counsellors)
+  const admin = {
+    watchCounsellors: (cb, onError) => onSnapshot(collection(db, 'counsellors'), (s) => cb(s.docs.map(plain)), onError),
+    add: (email, displayName, role, byEmail) => setDoc(doc(db, 'counsellors', email), {
+      displayName, active: true, role, addedBy: byEmail, addedAt: serverTimestamp(),
+    }),
+    update: (email, fields) => updateDoc(doc(db, 'counsellors', email), fields),
+  };
+
+  return { visitor, staff, admin, ms };
 }
 
 window.ZDFB = { init };
