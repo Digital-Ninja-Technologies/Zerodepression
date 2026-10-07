@@ -1,3 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /counsellor/
+
+Sitemap: https://www.zerodepression.org/sitemap.xml
