@@ -7,10 +7,10 @@
  * Until real values are present the chat pages show a safe "chat isn't available yet, please call" message.
  */
 window.ZD_FIREBASE_CONFIG = {
-  apiKey: "REPLACE_WITH_API_KEY",
-  authDomain: "REPLACE_WITH_PROJECT_ID.firebaseapp.com",
-  projectId: "REPLACE_WITH_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "REPLACE_WITH_SENDER_ID",
-  appId: "REPLACE_WITH_APP_ID",
+  apiKey: "AIzaSyCPY5VJ2RCFKPgmpantFnCP77r8bNbjO1w",
+  authDomain: "zerodepression.firebaseapp.com",
+  projectId: "zerodepression",
+  storageBucket: "zerodepression.firebasestorage.app",
+  messagingSenderId: "500091115635",
+  appId: "1:500091115635:web:976925e6816b6e81013206",
 };
