@@ -40,13 +40,19 @@
   <section id="view-login" class="login-card" hidden aria-labelledby="login-h1">
     <div class="form-card">
       <h1 id="login-h1" style="font-size:1.75rem">Admin sign in</h1>
-      <p>Enter your email and we'll send you a sign-in link. Only admins can use this page.</p>
+      <p>Sign in with your email and password. Only admins can use this page.</p>
       <form id="login-form" novalidate>
         <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="a-password">Password</label><input id="a-password" type="password" autocomplete="current-password"></div>
         <p id="login-error" class="form-status is-error" role="alert" hidden></p>
         <p id="login-info" class="form-status is-success" role="status" hidden></p>
-        <button id="login-btn" class="btn btn-primary" type="submit">Email me a sign-in link</button>
+        <button id="login-btn" class="btn btn-primary" type="submit">Sign in</button>
       </form>
+      <div class="room-actions" style="margin-top:14px;flex-wrap:wrap">
+        <button id="link-btn" class="btn-quiet" type="button">Email me a sign-in link instead</button>
+        <button id="reset-btn" class="btn-quiet" type="button">Set or reset my password</button>
+      </div>
+      <p class="fine" style="margin-top:12px">First time? Use the email link once, then choose "Set or reset my password" so you can sign in with a password next time.</p>
     </div>
   </section>
 

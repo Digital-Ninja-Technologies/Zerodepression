@@ -7,7 +7,7 @@
 
   var el = {
     login: $("#view-login"), admin: $("#view-admin"),
-    form: $("#login-form"), email: $("#a-email"), loginBtn: $("#login-btn"), loginErr: $("#login-error"), loginInfo: $("#login-info"),
+    form: $("#login-form"), email: $("#a-email"), password: $("#a-password"), loginBtn: $("#login-btn"), linkBtn: $("#link-btn"), resetBtn: $("#reset-btn"), loginErr: $("#login-error"), loginInfo: $("#login-info"),
     name: $("#me-name"), logout: $("#logout-btn"), conn: $("#banner-conn-top"),
     add: $("#add-form"), nName: $("#n-name"), nEmail: $("#n-email"), nRole: $("#n-role"), addBtn: $("#add-btn"),
     addErr: $("#add-error"), addInfo: $("#add-info"), list: $("#clist"), count: $("#count"),
@@ -29,6 +29,11 @@
   /* ------------------------------------------------------------ sign-in (email link, same as the inbox) */
   var LOGIN_ERRORS = {
     "auth/invalid-email": "That doesn't look like a valid email address.",
+    "auth/invalid-credential": "Incorrect email or password.",
+    "auth/wrong-password": "Incorrect email or password.",
+    "auth/user-not-found": "Incorrect email or password.",
+    "auth/user-disabled": "This account has been disabled. Ask another admin for help.",
+    "auth/operation-not-allowed": "Password sign-in isn't turned on in Firebase (Authentication > Sign-in method > Email/Password).",
     "auth/too-many-requests": "Too many attempts. Please wait a few minutes and try again.",
     "auth/network-request-failed": "We couldn't connect. Check your internet connection and try again.",
     "auth/invalid-action-code": "That sign-in link has expired or was already used. Request a new one.",
@@ -38,25 +43,56 @@
   function errText(err) { return LOGIN_ERRORS[err && err.code] || "Something went wrong. Please try again."; }
 
   function finishLink(email) {
-    completing = true; el.loginBtn.disabled = true;
+    completing = true; setBusy(true);
     loginMessage("info", "Signing you in…");
     return fb.staff.completeLink(email, location.href).then(function () {
       try { localStorage.removeItem(EMAIL_KEY); } catch (e) { /* ignore */ }
       history.replaceState(null, "", location.pathname);
-    }, function (err) { loginMessage("error", errText(err)); }).then(function () { completing = false; el.loginBtn.disabled = false; });
+    }, function (err) { loginMessage("error", errText(err)); }).then(function () { completing = false; setBusy(false); });
   }
 
+  function typedEmail() {
+    var email = el.email.value.trim().toLowerCase();
+    if (!email) { loginMessage("error", "Please enter your email address."); el.email.focus(); return null; }
+    return email;
+  }
+  function setBusy(busy) { el.loginBtn.disabled = busy; el.linkBtn.disabled = busy; el.resetBtn.disabled = busy; }
+
+  // "Sign in" (email + password). If the page was opened from an emailed sign-in link on a new device,
+  // the same button finishes that sign-in instead.
   el.form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (!configured) return;
-    var email = el.email.value.trim().toLowerCase();
-    if (!email) { loginMessage("error", "Please enter your email address."); return; }
+    var email = typedEmail(); if (!email) return;
     if (fb.staff.isLink(location.href)) { finishLink(email); return; }
-    loginMessage("", ""); el.loginBtn.disabled = true;
+    if (!el.password.value) { loginMessage("error", "Please enter your password, or choose \"Email me a sign-in link instead\"."); el.password.focus(); return; }
+    loginMessage("", ""); setBusy(true);
+    fb.staff.signInPassword(email, el.password.value).then(function () {
+      el.password.value = "";
+    }, function (err) { loginMessage("error", errText(err)); }).then(function () { setBusy(false); });
+  });
+
+  el.linkBtn.addEventListener("click", function () {
+    if (!configured) return;
+    var email = typedEmail(); if (!email) return;
+    loginMessage("", ""); setBusy(true);
     fb.staff.sendLink(email, location.origin + "/admin-dashboard/").then(function () {
       try { localStorage.setItem(EMAIL_KEY, email); } catch (e2) { /* ignore */ }
       loginMessage("info", "Check your email for a sign-in link, then open it on this device. It can take a minute.");
-    }, function (err) { loginMessage("error", errText(err)); }).then(function () { el.loginBtn.disabled = false; });
+    }, function (err) { loginMessage("error", errText(err)); }).then(function () { setBusy(false); });
+  });
+
+  // Sets a first password or resets a forgotten one. The reply is the same whether or not the address has an account.
+  el.resetBtn.addEventListener("click", function () {
+    if (!configured) return;
+    var email = typedEmail(); if (!email) return;
+    loginMessage("", ""); setBusy(true);
+    fb.staff.resetPassword(email).then(function () { return null; }, function (err) {
+      return err && err.code === "auth/user-not-found" ? null : err;
+    }).then(function (err) {
+      if (err) loginMessage("error", errText(err));
+      else loginMessage("info", "If that email has an account, we've sent a link to set or reset the password. It can take a minute.");
+    }).then(function () { setBusy(false); });
   });
 
   el.logout.addEventListener("click", function () { signOutNow(""); });
@@ -154,7 +190,7 @@
 
   /* ------------------------------------------------------------ boot */
   if (!configured) {
-    showView("login"); el.loginBtn.disabled = true;
+    showView("login"); setBusy(true);
     loginMessage("error", "The chat backend isn't configured yet (see backend/README.md).");
     return;
   }
@@ -168,6 +204,14 @@
 
   fb.staff.onAuth(function (user) {
     if (!user) { if (!completing && s.me) { stop(); s.me = null; showView("login"); } return; }
+    if (!user.emailVerified) {
+      // Security rules only trust verified emails, so an unverified password account can't get in yet.
+      fb.staff.sendVerification().catch(function () {}).then(function () { return fb.staff.signOut(); }).catch(function () {}).then(function () {
+        showView("login");
+        loginMessage("info", "Please verify your email first. We've sent a verification link to " + user.email + ". Open it, then sign in again.");
+      });
+      return;
+    }
     fb.staff.profile(user.email).then(function (profile) {
       if (!profile || profile.role !== "admin") {
         fb.staff.signOut().catch(function () {});

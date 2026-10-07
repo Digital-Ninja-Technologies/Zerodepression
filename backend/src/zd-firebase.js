@@ -4,6 +4,7 @@ import { initializeApp } from 'firebase/app';
 import {
   initializeAuth, browserSessionPersistence, connectAuthEmulator, signInAnonymously, signOut,
   onAuthStateChanged, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink,
+  signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification,
 } from 'firebase/auth';
 import {
   initializeFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, updateDoc, collection, query, where,
@@ -108,8 +109,12 @@ function init(config) {
 
   // ------------------------------------------------------------------ counsellor
   const staff = {
-    onAuth: (cb) => onAuthStateChanged(auth, (u) => cb(u && !u.isAnonymous ? { uid: u.uid, email: (u.email || '').toLowerCase() } : null)),
+    onAuth: (cb) => onAuthStateChanged(auth, (u) => cb(u && !u.isAnonymous ? { uid: u.uid, email: (u.email || '').toLowerCase(), emailVerified: u.emailVerified } : null)),
 
+    signInPassword: (email, password) => signInWithEmailAndPassword(auth, email, password),
+    // Also how an account first gets a password: the reset link proves the person owns the email address.
+    resetPassword: (email) => sendPasswordResetEmail(auth, email),
+    sendVerification: () => (auth.currentUser ? sendEmailVerification(auth.currentUser) : Promise.resolve()),
     sendLink: (email, url) => sendSignInLinkToEmail(auth, email, { url, handleCodeInApp: true }),
     isLink: (href) => isSignInWithEmailLink(auth, href),
     completeLink: (email, href) => signInWithEmailLink(auth, email, href),

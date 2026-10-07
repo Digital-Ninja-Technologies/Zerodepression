@@ -37,6 +37,10 @@ Until step 1 is done the chat pages show a safe "chat isn't available yet, pleas
 6. **Create the first admin.** Firestore → *Start collection* **`counsellors`**. Add a document whose **Document ID is
    your email in lowercase** with fields `displayName` (string), `active` (boolean, `true`) and `role` (string, `admin`).
    After that, sign in at `/admin-dashboard/` to add, rename, deactivate and promote counsellors; no more console work.
+   **Admin sign-in:** `/admin-dashboard/` accepts email + password (the *Email/Password* provider from step 2 covers it).
+   A new admin signs in once with the emailed link, then uses *Set or reset my password* to choose a password; from then on
+   they can sign in with email and password. Password accounts must have a verified email (the reset link verifies it),
+   because the security rules only trust verified addresses.
    (Counsellors added there get `role: counsellor`. Older docs with no `role` are treated as plain counsellors.)
 7. **Try it.** Open `/counsellor/` and sign in with a counsellor email (check that inbox for the link, open it
    on the same device). In another browser open `/chat/`, start a chat, and exchange messages.
