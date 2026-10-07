@@ -1673,6 +1673,136 @@ dialog.modal::backdrop {
   transform: none;
 }
 
+/* Photo slider (outreach) */
+.slider {
+  position: relative;
+}
+
+.slider-track {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  background: var(--sand);
+}
+
+.slider-track::-webkit-scrollbar {
+  display: none;
+}
+
+.slider-track:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 4px;
+}
+
+.slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+
+.slide img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.slider-btn:hover {
+  background: var(--sand);
+}
+
+.slider-btn:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.slider-btn[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.slider-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.slider-btn--prev {
+  left: 14px;
+}
+
+.slider-btn--next {
+  right: 14px;
+}
+
+.slider-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.slider-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--line);
+  cursor: pointer;
+}
+
+.slider-dot[aria-current="true"] {
+  background: var(--amber);
+  transform: scale(1.25);
+}
+
+.slider-dot:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .slider-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .slider-track {
+    border-radius: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slider-track {
+    scroll-behavior: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
