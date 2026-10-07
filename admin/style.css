@@ -1,0 +1,92 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+aside {
+    background-color: #ffa500;
+    height: 15vh;
+    width: 100%;
+    /* color: white; */
+    padding: 10px;
+}
+
+.logo .circle {
+    background-color: white;
+    position: absolute;
+    width: 45px;
+  height: 45px;
+  }
+.logo h4 {
+    color: #ffa500 !important;
+    z-index: 1;
+    font-size: 18px;
+}
+span {
+    color: white;
+    /* font-size: 12px; */
+}
+
+section {
+    flex: 1;
+    padding: 10px 15px;
+    width: 100%;
+    background-color: #f6f8fb;
+}
+
+section h1 {
+    background-color: white;
+    border-radius: 20px;
+    color: #000000;
+    font-weight: 500;
+    font-size: 1.3rem;
+    padding: 12px 14px;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  table td, table th {
+    padding: 8px;
+    width: 4%;
+  }
+  
+  /* table tr:nth-child(even){background-color: #ffa500;} */
+  
+  table tr:hover {background-color: #ddd;}
+  
+  table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #ffa500;
+    color: white;
+  }
+
+  table tbody {
+    background-color: white;
+  }
+@media screen and (min-width: 768px) {
+    body{
+        flex-direction: row;
+    }
+
+    aside {
+        height: 100vh;
+        width: 14%;
+    }
+    .logo {
+        margin-top: 30px;
+        margin-left: 10px;
+    }
+    section {
+        flex: 1;
+        padding: 20px 25px;
+        height: 100vh;
+    }
+
+    section h1 {
+        font-size: 1.8rem;
+    }
+}

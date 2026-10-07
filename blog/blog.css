@@ -1,0 +1,138 @@
+body {
+  background-color: #f6f8fb;
+}
+
+.hero {
+  width: 100%;
+  height: 300px;
+  background: rgba(0, 0, 0, 0.08) url(../assets/blog\ bg.webp) no-repeat center;
+  background-size: cover;
+  background-blend-mode: multiply;
+  text-align: center;
+  padding-top: 100px;
+}
+.hero h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  color: #ffa500;
+}
+
+.hero h3 {
+  font-size: 2rem;
+  color: #fff;
+  margin-top: -2px;
+}
+/* council card */
+.blog {
+  width: 90%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-rows: auto;
+  gap: 10px;
+  border: 200px;
+  background-color: unset;
+}
+
+.card {
+  min-width: unset;
+}
+.card_3 img,
+.card_2 img,
+.card_1 img {
+  object-fit: cover;
+}
+
+.card_3,
+.card_1,
+.card_2 {
+  height: 200px;
+}
+
+.card-body {
+  margin-top: 0;
+  background: white;
+  margin-bottom: 30px;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+.card-body p {
+  opacity: 0.6;
+}
+
+.hide {
+  display: none;
+}
+
+/* pagination */
+.pagination {
+  width: 90%;
+  height: 50px;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pagination a {
+  color: #0f2137;
+  padding: 8px 10px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  font-size: 15px;
+  display: inline-block;
+  margin-right: 5px;
+  opacity: 0.8;
+}
+
+#last img {
+  width: 28px;
+  height: 10px;
+  margin: auto;
+}
+.pagination a.active {
+  background-color: #ffa500;
+  color: white;
+  border-radius: 50%;
+}
+
+.pagination a:hover:not(.active) {
+  background-color: #ddd;
+}
+
+.foot-nav {
+  margin-bottom: 0;
+}
+/* media query */
+@media screen and (min-width: 1024px) {
+  .blog {
+    width: 85%;
+  }
+  .hero h1 {
+    font-size: 2.8rem;
+  }
+
+  .hero h3 {
+    font-size: 2.3rem;
+  }
+  .pagination {
+    width: 50%;
+  }
+  .pagination a {
+    font-size: 20px;
+    padding: 8px 16px;
+  }
+
+  #last img {
+    width: 40px;
+  }
+
+  .hide {
+    display: initial;
+  }
+
+  .subscribe {
+    width: 88%;
+    margin: 40px auto;
+  }
+}
