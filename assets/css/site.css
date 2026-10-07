@@ -2057,3 +2057,32 @@ dialog.modal::backdrop {
     font-size: 1.125rem;
   }
 }
+
+/* "Chat" in the top nav is a button, like "Chat anonymously" in the hero */
+.nav-links .nav-chat__btn {
+  margin-left: 6px;
+  padding: 10px 20px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.nav-links .nav-chat__btn:hover,
+.nav-links .nav-chat__btn:focus-visible {
+  background: #1b3160;
+  color: #fff;
+}
+
+@media (min-width: 921px) and (max-width: 1120px) {
+  .nav-links .nav-chat__btn {
+    margin-left: 4px;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 920px) {
+  .nav-links .nav-chat__btn {
+    margin-left: 0;
+    padding: 16px 18px;
+    text-align: center;
+  }
+}
