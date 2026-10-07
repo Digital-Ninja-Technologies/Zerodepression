@@ -2058,10 +2058,8 @@ dialog.modal::backdrop {
   }
 }
 
-/* "Chat" in the top nav is a button, like "Chat anonymously" in the hero */
+/* Chat is a button next to "Call a counsellor" on desktop; inside the menu on phones */
 .nav-links .nav-chat__btn {
-  margin-left: 6px;
-  padding: 10px 20px;
   background: var(--ink);
   color: #fff;
 }
@@ -2072,17 +2070,31 @@ dialog.modal::backdrop {
   color: #fff;
 }
 
-@media (min-width: 921px) and (max-width: 1120px) {
-  .nav-links .nav-chat__btn {
-    margin-left: 4px;
-    padding: 10px 16px;
+@media (min-width: 921px) {
+  .nav-chat {
+    display: none;
   }
 }
 
 @media (max-width: 920px) {
   .nav-links .nav-chat__btn {
-    margin-left: 0;
     padding: 16px 18px;
     text-align: center;
+  }
+}
+
+/* Desktop header: logo left, menu truly centred, buttons together on the right */
+@media (min-width: 921px) {
+  .nav {
+    display: grid;
+    grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+  }
+
+  .nav > .logo {
+    justify-self: start;
+  }
+
+  .nav > .nav-cta {
+    justify-self: end;
   }
 }
