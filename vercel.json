@@ -31,16 +31,6 @@
       "permanent": false
     },
     {
-      "source": "/counsellor",
-      "destination": "/#counsellors",
-      "permanent": false
-    },
-    {
-      "source": "/counsellor/(.*)",
-      "destination": "/#counsellors",
-      "permanent": false
-    },
-    {
       "source": "/gallery",
       "destination": "/about-us/",
       "permanent": false

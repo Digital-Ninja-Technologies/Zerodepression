@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counsellor inbox | ZeroDepression</title>
+<meta name="description" content="Private inbox for ZeroDepression volunteer counsellors.">
+<meta name="theme-color" content="#fffaf2">
+<link rel="canonical" href="https://www.zerodepression.org/counsellor/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ZeroDepression">
+<meta property="og:title" content="Counsellor inbox | ZeroDepression">
+<meta property="og:description" content="Private inbox for ZeroDepression volunteer counsellors.">
+<meta property="og:url" content="https://www.zerodepression.org/counsellor/">
+<meta property="og:image" content="https://www.zerodepression.org/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css"><link rel="stylesheet" href="/assets/css/chat.css"><meta name="robots" content="noindex, nofollow">
+<script>document.documentElement.classList.add('js')</script>
+
+
+
+</head>
+<body class="chat-page">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container nav">
+    <a class="logo" href="/" aria-label="ZeroDepression home"><svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><circle cx="20" cy="20" r="15" fill="none" stroke="#FFA500" stroke-width="8"/><circle cx="20" cy="20" r="3.5" fill="#10213F"/></svg><span><b>Zero</b>Depression</span></a>
+    <div class="nav-cta"><span class="pill">Counsellor inbox</span></div>
+  </div>
+</header>
+<main id="main">
+
+<div class="inbox-wrap">
+  <div id="live" class="sr-only" aria-live="polite"></div>
+
+  <section id="view-login" class="login-card" hidden aria-labelledby="login-h1">
+    <div class="form-card">
+      <h1 id="login-h1" style="font-size:1.75rem">Counsellor sign in</h1>
+      <p>Sign in with your email and the personal access code you were given.</p>
+      <form id="login-form" novalidate>
+        <div class="field"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="username" required></div>
+        <div class="field"><label for="c-code">Access code</label><input id="c-code" type="password" autocomplete="current-password" required placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"></div>
+        <p id="login-error" class="form-status is-error" role="alert" hidden></p>
+        <button id="login-btn" class="btn btn-primary" type="submit">Sign in</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="view-inbox" hidden aria-label="Inbox">
+    <h1 class="sr-only">Counsellor inbox</h1>
+    <div class="side-card" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+      <div><strong>Signed in as <span id="me-name"></span></strong><br><span class="fine">Keep this page open to receive alerts.</span></div>
+      <div class="room-actions">
+        <button id="alerts-btn" class="btn-quiet" type="button" aria-pressed="false">Turn on alerts</button>
+        <button id="logout-btn" class="btn-quiet" type="button">Sign out</button>
+      </div>
+    </div>
+    <div id="banner-conn-top" class="banner banner--conn" role="status" hidden>Reconnecting…</div>
+
+    <div class="inbox">
+      <div class="inbox-side">
+        <div class="side-card"><h2>Waiting</h2><ul id="list-waiting" class="qlist"></ul></div>
+        <div class="side-card"><h2>My chats</h2><ul id="list-mine" class="qlist"></ul></div>
+        <div class="side-card guide">
+          <h2>If someone may be at risk</h2>
+          <ul>
+            <li>Stay with them and take it seriously. Ask directly whether they're thinking of ending their life.</li>
+            <li>Share 112 and our free line 0800 1100 2200. Encourage them to reach someone nearby.</li>
+            <li>Don't promise secrecy if their life is in danger.</li>
+            <li>Never ask for their name, address or phone number. Anonymity is the promise.</li>
+            <li>You're a volunteer, not an emergency service. Hand back a chat if you need to step away.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="inbox-main">
+        <div id="pane-empty" class="inbox-empty"><p>Select a chat to read it.<br>New visitors appear under <strong>Waiting</strong> with a sound alert.</p></div>
+
+        <div id="pane-preview" class="room" hidden>
+          <div class="preview-card">
+            <h2 id="pv-name" style="margin:0"></h2>
+            <p><span id="pv-crisis" class="tag" hidden>May be at risk</span></p>
+            <p id="pv-text" class="lead" style="margin:0 auto"></p>
+            <p id="pv-error" class="form-status is-error" role="alert" hidden></p>
+            <div><button id="take-btn" class="btn btn-primary" type="button">Take this chat</button></div>
+          </div>
+        </div>
+
+        <div id="pane-room" class="room" hidden>
+          <div class="room-head">
+            <div><h2 id="room-title">Visitor</h2><p id="room-sub"></p></div>
+            <div class="room-actions">
+              <button id="release-btn" class="btn-quiet" type="button">Hand back</button>
+              <button id="close-btn" class="btn-quiet btn-danger" type="button">End chat</button>
+            </div>
+          </div>
+          <div id="banner-crisis" class="banner banner--crisis" role="alert" hidden><span><strong>This visitor may be at risk.</strong> They used words that suggest self-harm. Check in gently and share 112 and 0800 1100 2200.</span></div>
+          <div id="log" class="log" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></div>
+          <div id="ended" class="ended" hidden><p style="margin:0"><strong>This chat has ended.</strong></p><div class="hero-actions"><button id="done-btn" class="btn btn-primary" type="button">Done</button></div></div>
+          <form id="composer" class="composer">
+            <label class="sr-only" for="msg">Your reply</label>
+            <textarea id="msg" rows="1" maxlength="2000" placeholder="Type your reply…" autocomplete="off"></textarea>
+            <button id="send-btn" class="btn btn-primary" type="submit" disabled>Send</button>
+          </form>
+          <div id="composer-meta" class="composer-meta"><span>Enter to send · Shift+Enter for a new line</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</main>
+<footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">Confidential. Do not share what visitors tell you outside this inbox.</p></div></footer>
+
+<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-api.js" defer></script><script src="/assets/js/counsellor.js" defer></script>
+</body>
+</html>

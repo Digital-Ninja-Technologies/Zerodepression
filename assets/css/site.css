@@ -1802,3 +1802,41 @@ dialog.modal::backdrop {
   flex: none;
   width: 100%;
 }
+
+/* The hidden attribute must always win over component display rules. */
+[hidden] {
+  display: none !important;
+}
+
+.site-footer p a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nav-links a {
+  white-space: nowrap;
+}
+
+/* Six nav items plus the call button need less padding just above the mobile breakpoint. */
+@media (min-width: 921px) and (max-width: 1120px) {
+  .nav {
+    gap: 12px;
+  }
+
+  .nav-links {
+    gap: 0;
+  }
+
+  .nav-links a {
+    padding: 10px 9px;
+    font-size: 0.9063rem;
+  }
+
+  .nav-cta .btn {
+    padding-inline: 16px;
+  }
+
+  .logo span {
+    font-size: 1.125rem;
+  }
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat anonymously with a counsellor | ZeroDepression</title>
+<meta name="description" content="Chat privately and anonymously with a volunteer ZeroDepression counsellor. Free, no name or sign-up needed.">
+<meta name="theme-color" content="#fffaf2">
+<link rel="canonical" href="https://www.zerodepression.org/chat/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ZeroDepression">
+<meta property="og:title" content="Chat anonymously with a counsellor | ZeroDepression">
+<meta property="og:description" content="Chat privately and anonymously with a volunteer ZeroDepression counsellor. Free, no name or sign-up needed.">
+<meta property="og:url" content="https://www.zerodepression.org/chat/">
+<meta property="og:image" content="https://www.zerodepression.org/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css"><link rel="stylesheet" href="/assets/css/chat.css">
+<script>document.documentElement.classList.add('js')</script>
+
+
+
+</head>
+<body class="chat-page">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container nav">
+    <a class="logo" href="/" aria-label="ZeroDepression home"><svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><circle cx="20" cy="20" r="15" fill="none" stroke="#FFA500" stroke-width="8"/><circle cx="20" cy="20" r="3.5" fill="#10213F"/></svg><span><b>Zero</b>Depression</span></a>
+    <div class="nav-cta"><a class="btn btn-primary btn-sm" href="tel:+23480011002200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <span class="long">Call 0800 1100 2200</span><span class="short">Call</span></a><button id="quick-exit" class="quick-exit" type="button" aria-label="Quick exit: leave this page immediately. Shortcut: press Escape twice.">Quick exit</button></div>
+  </div>
+</header>
+<main id="main">
+
+<div class="chat-wrap">
+  <div id="live" class="sr-only" aria-live="polite"></div>
+
+  <section id="view-intro" class="chat-intro" aria-labelledby="chat-h1">
+    <p class="breadcrumb"><a href="/">Home</a> / Chat</p>
+    <p><span id="availability" class="pill" role="status">Checking availability…</span></p>
+    <h1 id="chat-h1" style="margin-top:16px">Talk to a counsellor, anonymously</h1>
+    <p class="lead">Type what's on your mind. A volunteer counsellor will join you as soon as one is free, and you can stay as anonymous as you like.</p>
+    <p id="intro-notice" class="callout-emergency" role="status" hidden style="margin-bottom:20px"></p>
+    <ul class="promise"><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg><span>No name, email or phone number needed.</span></li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg><span>Volunteer counsellors who listen without judging.</span></li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg><span>Free, always.</span></li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg><span>Chats are deleted from our system 7 days after they end.</span></li></ul>
+
+    <form id="start-form" class="form-card" novalidate>
+      <div class="field">
+        <label for="nick">What should we call you? <span class="fine">(optional)</span></label>
+        <input id="nick" name="nick" type="text" maxlength="24" autocomplete="off" autocapitalize="words" placeholder="A first name, a nickname, or leave it blank">
+      </div>
+      <p id="start-error" class="form-status is-error" role="alert" hidden></p>
+      <button id="start-btn" class="btn btn-primary" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Start anonymous chat</button>
+      <p class="fine" style="margin:14px 0 0">By starting, you understand this is volunteer peer support and not an emergency or medical service.</p>
+    </form>
+
+    <div class="callout-emergency" style="margin-top:24px">
+      <strong>In immediate danger, or thinking about ending your life?</strong> Please call <a href="tel:112">112</a> or go to your nearest hospital now. You can also call our free line any time on <a href="tel:+23480011002200">0800 1100 2200</a>.
+    </div>
+
+    <div class="fine" style="margin-top:24px">
+      <details>
+        <summary>How your privacy is protected</summary>
+        <ul>
+          <li>There are no accounts, no cookies and no analytics on this page.</li>
+          <li>We store your messages and nickname so a counsellor can reply. Volunteer counsellors can read them, and nobody else.</li>
+          <li>A finished chat is deleted 7 days after it ends. Unfinished chats expire on their own.</li>
+          <li>To stop abuse we keep a one-way scrambled form of your connection address for up to 2 hours. We can't turn it back into your address.</li>
+          <li>Anyone using this device can see this page, so use <strong>Quick exit</strong> (or press Esc twice) if you need to leave fast, and <strong>Clear this conversation</strong> when you're done.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <section id="view-room" hidden aria-label="Chat">
+    <div class="room">
+      <div class="room-head">
+        <div><h1 id="room-title" style="font-size:1.0625rem">Connecting…</h1><p id="room-sub"></p></div>
+        <div class="room-actions"><button id="end-btn" class="btn-quiet btn-danger" type="button">End chat</button></div>
+      </div>
+      <div id="banner-wait" class="banner banner--wait" hidden>
+        <span id="wait-text"></span>
+        <a class="btn btn-primary btn-sm" href="tel:+23480011002200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Call 0800 1100 2200</a>
+      </div>
+      <div id="banner-crisis" class="banner banner--crisis" role="alert" hidden>
+        <span><strong>You matter, and you don't have to face this alone.</strong> If you might act on thoughts of ending your life, please call <a href="tel:112">112</a> now or go to your nearest hospital. You can also call us free on <a href="tel:+23480011002200">0800 1100 2200</a>. A counsellor will keep talking with you here.</span>
+      </div>
+      <div id="banner-conn" class="banner banner--conn" role="status" hidden>Reconnecting… your messages are safe.</div>
+      <div id="log" class="log" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></div>
+      <div id="ended" class="ended" hidden>
+        <p style="margin:0"><strong>This chat has ended.</strong> Thank you for reaching out.</p>
+        <div class="hero-actions">
+          <button id="again-btn" class="btn btn-primary" type="button">Start a new chat</button>
+          <button id="clear-btn" class="btn-quiet" type="button">Clear this conversation from this device</button>
+        </div>
+      </div>
+      <form id="composer" class="composer">
+        <label class="sr-only" for="msg">Your message</label>
+        <textarea id="msg" rows="1" maxlength="2000" placeholder="Type your message…" autocomplete="off"></textarea>
+        <button id="send-btn" class="btn btn-primary" type="submit" disabled>Send</button>
+      </form>
+      <div id="composer-meta" class="composer-meta"><span>Enter to send · Shift+Enter for a new line</span><span id="count">0 / 2000</span></div>
+    </div>
+  </section>
+</div>
+</main>
+<footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">This is volunteer-led peer counselling, not an emergency service. If you are in immediate danger, call <a href="tel:112">112</a>. <a href="/">Back to the main site</a></p></div></footer>
+
+<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-api.js" defer></script><script src="/assets/js/chat.js" defer></script>
+</body>
+</html>
