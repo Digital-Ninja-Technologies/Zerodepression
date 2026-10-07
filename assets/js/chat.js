@@ -12,7 +12,7 @@
     intro: $("#view-intro"), room: $("#view-room"), pill: $("#availability"),
     form: $("#start-form"), nick: $("#nick"), startBtn: $("#start-btn"), startErr: $("#start-error"),
     title: $("#room-title"), sub: $("#room-sub"),
-    wait: $("#banner-wait"), waitText: $("#wait-text"), crisis: $("#banner-crisis"), conn: $("#banner-conn"),
+    wait: $("#banner-wait"), waitText: $("#wait-text"), tips: $("#wait-tips"), crisis: $("#banner-crisis"), conn: $("#banner-conn"),
     log: $("#log"), composer: $("#composer"), msg: $("#msg"), send: $("#send-btn"), count: $("#count"), meta: $("#composer-meta"),
     end: $("#end-btn"), ended: $("#ended"), again: $("#again-btn"), clear: $("#clear-btn"),
     quick: $("#quick-exit"), notice: $("#intro-notice"), live: $("#live"),
@@ -187,15 +187,15 @@
     if (status === "waiting") {
       el.title.textContent = "Waiting for a counsellor";
       el.sub.textContent = "Anonymous · free";
-      el.wait.hidden = false; renderWait();
+      el.wait.hidden = false; el.tips.hidden = false; renderWait();
     } else if (status === "active") {
       el.title.textContent = "Chatting with " + (s.counsellor || "a counsellor");
       el.sub.textContent = "Volunteer counsellor · anonymous";
-      el.wait.hidden = true;
+      el.wait.hidden = true; el.tips.hidden = true;
     } else if (status === "closed") {
       el.title.textContent = "Chat ended";
       el.sub.textContent = "Take care of yourself";
-      el.wait.hidden = true; el.composer.hidden = true; el.meta.hidden = true; el.end.hidden = true; el.ended.hidden = false;
+      el.wait.hidden = true; el.tips.hidden = true; el.composer.hidden = true; el.meta.hidden = true; el.end.hidden = true; el.ended.hidden = false;
     }
   }
 

@@ -2091,10 +2091,16 @@ dialog.modal::backdrop {
   }
 
   .nav > .logo {
+    grid-column: 1;
     justify-self: start;
   }
 
+  .nav > nav {
+    grid-column: 2;
+  }
+
   .nav > .nav-cta {
+    grid-column: 3;
     justify-self: end;
   }
 }
