@@ -376,6 +376,12 @@ p {
   flex: none;
 }
 
+.logo img {
+  display: block;
+  height: 50px;
+  width: auto;
+}
+
 .logo b {
   font-weight: 800;
 }
