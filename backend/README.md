@@ -11,7 +11,7 @@ Runs on Firebase **Authentication + Cloud Firestore** only. No Cloud Functions, 
 | **Counsellors** | Sign in with an **email link** (no password). They are let in only if their *verified* email has an active entry in the `counsellors` collection. |
 | **Security** | [`firestore.rules`](firestore.rules) is the whole security model: visitors can only touch their own chat, only approved counsellors can see the queue, only one counsellor can take a chat, nothing can be deleted by a client, and messages can't be forged. 89 automated tests cover it. |
 | **Live updates** | Firestore pushes new messages instantly (no polling). |
-| **Retention** | Every chat and message carries an `expireAt` date 7 days out; a Firestore TTL policy deletes them automatically. |
+| **Retention** | Every chat and message carries an `expireAt` date 7 days out. A Firestore TTL policy (Blaze plan only) can delete them automatically; it is not set up yet. |
 | **Frontend** | `assets/js/chat.js` (visitor), `counsellor.js` (inbox), `zd-config.js` (your project's public config), and `assets/js/vendor/zd-firebase.js` (the Firebase SDK, bundled from `src/zd-firebase.js` so the site loads nothing from Google's CDN). |
 
 ## One-time setup (about 10 minutes, in the Firebase console)
@@ -36,7 +36,8 @@ Until step 1 is done the chat pages show a safe "chat isn't available yet, pleas
    - collection group **`private`**, timestamp field **`expireAt`** (the visitors' phone numbers/emails; these are also
      deleted by the counsellor who marks the request followed up, so the TTL policy is the safety net)
 
-   Without these the site's "messages are deleted after about 7 days" promise is not true.
+   TTL needs the **Blaze** (pay-as-you-go) plan. On the free Spark plan nothing is deleted automatically, so the site
+   makes no promise about deletion.
 6. **Create the first admin.** Firestore → *Start collection* **`counsellors`**. Add a document whose **Document ID is
    your email in lowercase** with fields `displayName` (string), `active` (boolean, `true`) and `role` (string, `admin`).
    After that, sign in at `/admin-dashboard/` to add, rename, deactivate and promote counsellors; no more console work.
@@ -59,7 +60,7 @@ optional note and consent. It is stored as `contactRequests/{uid}` (name + metho
   **Accept this request** wins (the security rules allow the write only while the status is still `new`) and can then see the
   details and a one-click WhatsApp/call/email link. Nobody else can read the details.
 - **Mark as followed up** sets the status to `done` and deletes the details in the same batch; **Hand back** returns the request
-  to the queue. Requests and details also expire after 7 days (TTL policies above).
+  to the queue. With TTL policies (Blaze plan only) requests and details also expire after 7 days.
 - One request per anonymous browser identity, so repeat submissions from the same tab are refused.
 - **Deploy order:** publish the new `firestore.rules` (and add the two TTL policies) before the new site goes live, otherwise the
   form will report an error until the rules are in place.
@@ -80,7 +81,7 @@ npm run build:sdk     # rebuild assets/js/vendor/zd-firebase.js after editing sr
   classifier**: it runs in the visitor's browser, will miss things, and a human must read every chat.
 - Counsellors only hear about new chats while their inbox tab is open (sound + optional desktop notification).
 - The queue only shows visitors who are still on the page (they send a heartbeat every 25 seconds).
-  Abandoned chats are hidden, not deleted, and are removed by the TTL policy.
+  Abandoned chats are hidden, not deleted. With a TTL policy (Blaze plan only) they are removed after 7 days.
 - **Abuse limits are light.** Each visitor can have one chat per anonymous identity and can send one message per
   0.6 seconds, up to 400 per chat. Firebase throttles anonymous sign-ups per network. There is no server-side
   per-IP limit. If abuse appears, add Firebase **App Check**, or move to the Blaze plan and add Cloud Functions.
