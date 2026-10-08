@@ -1821,18 +1821,21 @@ dialog.modal::backdrop {
   position: relative;
 }
 
+.slider {
+  --per-view: 3;
+  --slide-gap: 16px;
+}
+
 .slider-track {
   display: flex;
+  gap: var(--slide-gap);
   margin: 0;
-  padding: 0;
+  padding: 0 0 6px;
   list-style: none;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   scrollbar-width: none;
-  border-radius: 28px;
-  box-shadow: var(--shadow);
-  background: var(--sand);
 }
 
 .slider-track::-webkit-scrollbar {
@@ -1845,8 +1848,12 @@ dialog.modal::backdrop {
 }
 
 .slide {
-  flex: 0 0 100%;
-  scroll-snap-align: center;
+  flex: 0 0 calc((100% - (var(--per-view) - 1) * var(--slide-gap)) / var(--per-view));
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--sand);
+  box-shadow: var(--shadow);
 }
 
 .slide img {
@@ -1929,14 +1936,26 @@ dialog.modal::backdrop {
   outline-offset: 3px;
 }
 
+@media (max-width: 1000px) {
+  .slider {
+    --per-view: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .slider {
+    --per-view: 1;
+  }
+}
+
 @media (max-width: 760px) {
   .slider-btn {
     width: 40px;
     height: 40px;
   }
 
-  .slider-track {
-    border-radius: 20px;
+  .slide {
+    border-radius: 16px;
   }
 }
 
