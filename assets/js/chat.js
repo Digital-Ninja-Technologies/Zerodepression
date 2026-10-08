@@ -32,6 +32,7 @@
     el.intro.hidden = view !== "intro";
     el.room.hidden = view !== "room";
     document.title = s.baseTitle;
+    window.scrollTo(0, 0);   // the previous screen may have been scrolled, which would leave the new one half off-screen
     if (view === "intro") checkOnline();
   }
 
@@ -105,7 +106,8 @@
     s.unsubs.push(fb.visitor.watchChat(uid, onChat, onLost));
     s.unsubs.push(fb.visitor.watchMessages(uid, onMessages, onLost));
     s.hbTimer = setInterval(beat, HEARTBEAT);
-    el.msg.focus();
+    // On a phone, focusing the box opens the keyboard over the waiting message, so only do it with a mouse.
+    if (!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) el.msg.focus();
   }
 
   function beat() {
@@ -188,6 +190,8 @@
       el.title.textContent = "Waiting for a counsellor";
       el.sub.textContent = "Anonymous · free";
       el.wait.hidden = false; el.tips.hidden = false; renderWait();
+      // On a phone the tips start collapsed so the conversation keeps the screen; people can still open them.
+      if (!s.tipsSet) { s.tipsSet = true; el.tips.open = !(window.matchMedia && window.matchMedia("(max-width: 560px)").matches); }
     } else if (status === "active") {
       el.title.textContent = "Chatting with " + (s.counsellor || "a counsellor");
       el.sub.textContent = "Volunteer counsellor · anonymous";
