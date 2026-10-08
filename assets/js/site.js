@@ -273,7 +273,7 @@
       "Message sent. Thank you, we'll be in touch."
     );
   });
-  /* Photo slider */
+  /* Photo slider: shows 3 photos at once on wide screens (2 on tablets, 1 on phones) and moves one photo at a time */
   $$("[data-slider]").forEach(function (slider) {
     var track = $(".slider-track", slider);
     var slides = $$(".slide", slider);
@@ -285,38 +285,54 @@
     var timer = null;
     var settle = null;
     var moving = false;
+    var dots = [];
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    var dots = slides.map(function (_, i) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.className = "slider-dot";
-      b.setAttribute("aria-label", "Show photo " + (i + 1));
-      b.addEventListener("click", function () { go(i, true); });
-      dotsBox.appendChild(b);
-      return b;
-    });
+    function perView() { return Math.max(1, Math.round(track.clientWidth / slides[0].offsetWidth)); }
+    function maxIndex() { return Math.max(0, slides.length - perView()); }
+    function step() { return slides.length > 1 ? slides[1].offsetLeft - slides[0].offsetLeft : track.clientWidth; }
+
+    function buildDots() {
+      var want = maxIndex() + 1;
+      if (dots.length === want) return;
+      dotsBox.textContent = "";
+      dots = [];
+      for (var i = 0; i < want; i++) {
+        (function (n) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "slider-dot";
+          b.setAttribute("aria-label", "Show photos from " + (n + 1));
+          b.addEventListener("click", function () { go(n, true); });
+          dotsBox.appendChild(b);
+          dots.push(b);
+        })(i);
+      }
+      dotsBox.hidden = want < 2;
+    }
 
     function paint() {
+      buildDots();
+      index = Math.max(0, Math.min(maxIndex(), index));
       dots.forEach(function (d, i) { d.setAttribute("aria-current", i === index ? "true" : "false"); });
       prev.disabled = index === 0;
-      next.disabled = index === slides.length - 1;
+      next.disabled = index >= maxIndex();
     }
 
     function go(i, user) {
-      index = Math.max(0, Math.min(slides.length - 1, i));
+      index = Math.max(0, Math.min(maxIndex(), i));
       moving = true;
       clearTimeout(settle);
       settle = setTimeout(function () { moving = false; }, 700);
-      track.scrollTo({ left: slides[index].offsetLeft - track.offsetLeft, behavior: reduce ? "auto" : "smooth" });
+      track.scrollTo({ left: slides[index].offsetLeft - slides[0].offsetLeft, behavior: reduce ? "auto" : "smooth" });
       paint();
       if (user) stop();
     }
 
     function stop() { if (timer) { clearInterval(timer); timer = null; } }
     function start() {
-      if (reduce || timer) return;
-      timer = setInterval(function () { go(index === slides.length - 1 ? 0 : index + 1, false); }, 5000);
+      if (reduce || timer || maxIndex() === 0) return;
+      timer = setInterval(function () { go(index >= maxIndex() ? 0 : index + 1, false); }, 5000);
     }
 
     prev.addEventListener("click", function () { go(index - 1, true); });
@@ -333,13 +349,14 @@
       ticking = true;
       requestAnimationFrame(function () {
         ticking = false;
-        var i = Math.round(track.scrollLeft / track.clientWidth);
-        if (i !== index && i >= 0 && i < slides.length) { index = i; paint(); }
+        var i = Math.round(track.scrollLeft / step());
+        if (i !== index && i >= 0 && i <= maxIndex()) { index = i; paint(); }
       });
     }, { passive: true });
     track.addEventListener("pointerdown", stop);
     slider.addEventListener("mouseenter", stop);
     slider.addEventListener("focusin", stop);
+    window.addEventListener("resize", function () { paint(); go(index, false); });
 
     // autoplay only while the slider is on screen
     if ("IntersectionObserver" in window) {
