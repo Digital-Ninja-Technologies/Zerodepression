@@ -89,3 +89,24 @@ npm run build:sdk     # rebuild assets/js/vendor/zd-firebase.js after editing sr
   counsellor a sign-in link. Only a verified, approved email can ever *use* one.
 - There is no AI in the loop: every reply is written by a human volunteer.
 - Nobody moderates counsellors' messages. Decide on a volunteer code of conduct and supervision.
+
+## Online toggle and alerts
+
+Counsellors switch **Online** on in the inbox. That sets `presence/{uid}.onlineUntil` up to 8 hours ahead, so
+visitors see them as online even with the inbox closed, and it subscribes the device to Web Push
+(`pushSubs/{uid}/devices/{id}`, readable only by that counsellor). It switches itself off after 8 hours.
+
+When a visitor starts a chat or sends a call-back request, the chat page calls `/api/notify` (a Vercel function in
+`api/notify.js`). It checks the chat/request really is new, records `notifications/{kind}_{id}` so each one alerts only
+once, then sends a push to every device of each online, active counsellor, and an email to those whose inbox isn't
+open. Alerts never contain anything the visitor wrote.
+
+Vercel environment variables it needs:
+
+| Variable | What |
+| --- | --- |
+| `FIREBASE_SERVICE_ACCOUNT` | Firebase console → Project settings → Service accounts → Generate new private key; paste the whole JSON |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web Push keys; the public key is also in `assets/js/zd-config.js` |
+| `RESEND_API_KEY`, `ALERT_FROM` | email via Resend, e.g. `ZeroDepression <alerts@zerodepression.org>` (domain verified in Resend) |
+
+iPhone/iPad only receive web push when the inbox is added to the Home Screen (the page has a manifest for this).

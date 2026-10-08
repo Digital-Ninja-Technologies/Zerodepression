@@ -5,13 +5,16 @@
   var BEAT = 45000;            // presence heartbeat
   var STALE_WAITING = 3 * 60000; // hide waiting chats whose visitor has gone quiet
   var MAX_ACTIVE = 3;
+  var ONLINE_MS = 8 * 3600000;  // Online toggle switches itself off after 8 hours
+  var DEVICE_KEY = "zd_push_device";
 
   function $(sel) { return document.querySelector(sel); }
 
   var el = {
     login: $("#view-login"), inbox: $("#view-inbox"),
     form: $("#login-form"), email: $("#c-email"), loginBtn: $("#login-btn"), loginErr: $("#login-error"), loginInfo: $("#login-info"),
-    name: $("#me-name"), logout: $("#logout-btn"), alerts: $("#alerts-btn"), conn: $("#banner-conn-top"),
+    name: $("#me-name"), logout: $("#logout-btn"), conn: $("#banner-conn-top"),
+    onlineBtn: $("#online-toggle"), onlineStatus: $("#online-status"), onlineHint: $("#online-hint"),
     waiting: $("#list-waiting"), mine: $("#list-mine"), contacts: $("#list-contacts"), followups: $("#list-followups"),
     pane: $("#pane-contact"), ctName: $("#ct-name"), ctMeta: $("#ct-meta"), ctDetails: $("#ct-details"), ctKind: $("#ct-contact-kind"),
     ctLink: $("#ct-contact-link"), ctNote: $("#ct-note"), ctHint: $("#ct-hint"), ctErr: $("#ct-error"),
@@ -29,7 +32,7 @@
 
   var s = { user: null, name: null, waiting: [], mine: [], contacts: [], followups: [], knownContacts: null, claiming: null, sel: null, chatUnsubs: [], unsubs: [], nodes: {}, known: null,
             knownCrisis: {}, beatTimer: null, renderTimer: null, busy: false, baseTitle: document.title, audio: null,
-            lastChat: null };
+            lastChat: null, onlineUntil: null, onlineTimer: null, pushState: null };
 
   /* ------------------------------------------------------------ views */
   function showView(v) {
@@ -80,6 +83,9 @@
   el.logout.addEventListener("click", function () { signOutNow("You've been signed out."); });
 
   function signOutNow(message) {
+    if (message && s.onlineUntil && s.onlineUntil > Date.now()) {
+      message += " You're still online and will get alerts until " + clock(s.onlineUntil) + ". Sign in and switch Online off to stop them.";
+    }
     teardown();
     s.user = null; s.name = null;
     if (fb) fb.staff.signOut().catch(function () {});      // immediate; the "online" marker expires by itself in 2 minutes
@@ -90,7 +96,8 @@
   function teardown() {
     s.unsubs.concat(s.chatUnsubs).forEach(function (u) { try { u(); } catch (e) { /* ignore */ } });
     s.unsubs = []; s.chatUnsubs = [];
-    clearInterval(s.beatTimer); clearInterval(s.renderTimer);
+    clearInterval(s.beatTimer); clearInterval(s.renderTimer); clearTimeout(s.onlineTimer);
+    s.onlineUntil = null; renderOnline();
     s.sel = null; s.known = null; s.knownCrisis = {}; s.waiting = []; s.mine = []; s.contacts = []; s.followups = []; s.knownContacts = null;
     showPane("empty");
     document.title = s.baseTitle;
@@ -109,6 +116,8 @@
     s.unsubs.push(fb.staff.watchMine(user.uid, function (list) { s.mine = list; renderLists(); }, onQueueError));
     s.unsubs.push(fb.staff.watchNewContacts(function (list) { s.contacts = list; onContacts(); }, onQueueError));
     s.unsubs.push(fb.staff.watchMyContacts(user.uid, function (list) { s.followups = list; renderContacts(); }, onQueueError));
+    s.unsubs.push(fb.staff.watchPresence(user.uid, function (p) { s.onlineUntil = p.onlineUntil; renderOnline(); }, function () {}));
+    refreshPushState();
   }
 
   function onQueueError(err) {
@@ -309,11 +318,95 @@
     } catch (e) { /* audio is blocked until a user gesture */ }
   }
 
-  el.alerts.addEventListener("click", function () {
-    beep(1);
-    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
-    el.alerts.textContent = "Alerts on";
-    el.alerts.setAttribute("aria-pressed", "true");
+  /* ------------------------------------------------------------ Online toggle + push alerts */
+  var PUSH_KEY = window.ZD_PUSH_PUBLIC_KEY || "";
+
+  function clock(ms) {
+    try { return new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; }
+  }
+  function isOnline() { return !!(s.onlineUntil && s.onlineUntil > Date.now()); }
+  function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+  function isStandalone() { return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
+  function pushSupported() { return !!(PUSH_KEY && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window); }
+
+  function renderOnline() {
+    if (!el.onlineBtn) return;
+    var on = isOnline();
+    el.onlineBtn.setAttribute("aria-checked", on ? "true" : "false");
+    el.onlineStatus.dataset.state = on ? "on" : "off";
+    var how = s.pushState === "on" ? "push on this device and email"
+      : s.pushState === "denied" ? "email only (notifications are blocked for this site in your browser settings)"
+      : s.pushState === "unsupported" ? "email only (this browser can't receive push alerts)"
+      : "email";
+    el.onlineStatus.textContent = on
+      ? "Online until " + clock(s.onlineUntil) + ". Alerts: " + how + ", even when this page is closed."
+      : "Offline. Switch on to stay online for up to 8 hours and get alerts even when this page is closed.";
+    var hint = "";
+    if (on && isIOS() && !isStandalone()) hint = "On iPhone or iPad, push alerts only work from the Home Screen: tap Share, then Add to Home Screen, open the inbox from there and switch Online on again.";
+    el.onlineHint.textContent = hint; el.onlineHint.hidden = !hint;
+    clearTimeout(s.onlineTimer);
+    if (on) s.onlineTimer = setTimeout(renderOnline, Math.min(s.onlineUntil - Date.now() + 1000, 2147483000));
+  }
+
+  function b64ToBytes(b64) {
+    var pad = "=".repeat((4 - (b64.length % 4)) % 4);
+    var raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  function deviceIdFor(endpoint) {
+    var enc = new TextEncoder().encode(endpoint);
+    return crypto.subtle.digest("SHA-256", enc).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("").slice(0, 40);
+    });
+  }
+
+  // What push can do on this device right now, without prompting.
+  function refreshPushState() {
+    if (!pushSupported()) { s.pushState = "unsupported"; renderOnline(); return; }
+    if (Notification.permission === "denied") { s.pushState = "denied"; renderOnline(); return; }
+    navigator.serviceWorker.getRegistration("/counsellor/").then(function (reg) {
+      return reg ? reg.pushManager.getSubscription() : null;
+    }).then(function (sub) { s.pushState = sub && Notification.permission === "granted" ? "on" : null; renderOnline(); },
+      function () { s.pushState = null; renderOnline(); });
+  }
+
+  // Asks for permission (must run from a click), subscribes this device and saves the subscription.
+  function enablePush() {
+    if (!pushSupported()) return Promise.resolve("unsupported");
+    return Notification.requestPermission().then(function (perm) {
+      if (perm !== "granted") return perm === "denied" ? "denied" : null;
+      return navigator.serviceWorker.register("/counsellor/sw.js", { scope: "/counsellor/" }).then(function () {
+        return navigator.serviceWorker.ready;
+      }).then(function (reg) {
+        return reg.pushManager.getSubscription().then(function (sub) {
+          return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(PUSH_KEY) });
+        });
+      }).then(function (sub) {
+        var j = sub.toJSON();
+        return deviceIdFor(sub.endpoint).then(function (id) {
+          try { localStorage.setItem(DEVICE_KEY, id); } catch (e) { /* ignore */ }
+          return fb.staff.savePushDevice(s.user.uid, id, { endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth });
+        });
+      }).then(function () { return "on"; });
+    }).catch(function () { return null; });
+  }
+
+  if (el.onlineBtn) el.onlineBtn.addEventListener("click", function () {
+    if (!s.user) return;
+    beep(1);   // unlocks sound for in-page alerts (browsers need a click first)
+    el.onlineBtn.disabled = true;
+    var wasOn = isOnline();
+    var work = wasOn
+      ? fb.staff.setOnline(s.user.uid, null)
+      : enablePush().then(function (state) {
+          s.pushState = state;
+          return fb.staff.setOnline(s.user.uid, Date.now() + ONLINE_MS);
+        });
+    work.then(function () { el.conn.hidden = true; }, function () {
+      el.onlineStatus.textContent = "Couldn't change your status. Check your connection and try again.";
+    }).then(function () { el.onlineBtn.disabled = false; });
   });
 
   function notifyNew(fresh) {
@@ -322,7 +415,7 @@
     if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
       try {
         new Notification(crisis ? "A visitor may be in crisis" : "New anonymous chat waiting", {
-          body: fresh.length === 1 ? "Someone would like to talk." : fresh.length + " people would like to talk.", tag: "zd-waiting",
+          body: fresh.length === 1 ? "Someone would like to talk." : fresh.length + " people would like to talk.", tag: "zd-chat",
         });
       } catch (e) { /* ignore */ }
     }

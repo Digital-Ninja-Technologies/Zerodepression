@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import {
   initializeFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, updateDoc, collection, query, where,
-  orderBy, onSnapshot, getDocs, writeBatch, serverTimestamp, increment, Timestamp,
+  orderBy, onSnapshot, getDocs, writeBatch, serverTimestamp, increment, Timestamp, deleteDoc,
 } from 'firebase/firestore';
 
 const KEEP_DAYS = 7;
@@ -112,12 +112,20 @@ function init(config) {
       });
       b.set(doc(db, 'contactRequests', uid, 'private', 'details'), { contact, note, expireAt: inDays(KEEP_DAYS) });
       await b.commit();
+      return uid;
     },
 
-    // Number of counsellors seen in the last 2 minutes. Public read, no sign-in needed.
+    // Number of counsellors online: inbox open in the last 2 minutes, or Online toggle switched on. Public read.
     async online() {
-      const s = await getDocs(query(collection(db, 'presence'), where('lastSeen', '>', Timestamp.fromMillis(Date.now() - 120000))));
-      return s.size;
+      const now = Date.now();
+      const [recent, toggled] = await Promise.all([
+        getDocs(query(collection(db, 'presence'), where('lastSeen', '>', Timestamp.fromMillis(now - 120000)))),
+        getDocs(query(collection(db, 'presence'), where('onlineUntil', '>', Timestamp.fromMillis(now)))),
+      ]);
+      const ids = new Set();
+      recent.forEach((d) => ids.add(d.id));
+      toggled.forEach((d) => ids.add(d.id));
+      return ids.size;
     },
   };
 
@@ -143,7 +151,21 @@ function init(config) {
       } catch (e) { return null; }
     },
 
-    heartbeat: (uid) => setDoc(doc(db, 'presence', uid), { lastSeen: serverTimestamp() }),
+    // merge keeps the Online toggle (onlineUntil) as it is
+    heartbeat: (uid) => setDoc(doc(db, 'presence', uid), { lastSeen: serverTimestamp() }, { merge: true }),
+
+    // ---- Online toggle: stay "online" (and get push/email alerts) until untilMs, or go offline with null
+    setOnline: (uid, untilMs) => setDoc(doc(db, 'presence', uid), {
+      lastSeen: serverTimestamp(), onlineUntil: untilMs ? Timestamp.fromMillis(untilMs) : null,
+    }, { merge: true }),
+    watchPresence: (uid, cb, onError) => onSnapshot(doc(db, 'presence', uid), (s) => {
+      const d = s.exists() ? s.data() : {};
+      cb({ onlineUntil: d.onlineUntil && typeof d.onlineUntil.toMillis === 'function' ? d.onlineUntil.toMillis() : null });
+    }, onError),
+    savePushDevice: (uid, deviceId, sub) => setDoc(doc(db, 'pushSubs', uid, 'devices', deviceId), {
+      endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth, updatedAt: serverTimestamp(),
+    }),
+    removePushDevice: (uid, deviceId) => deleteDoc(doc(db, 'pushSubs', uid, 'devices', deviceId)),
 
     watchWaiting: (cb, onError) => onSnapshot(query(collection(db, 'chats'), where('status', '==', 'waiting')), (s) => cb(s.docs.map(plain)), onError),
     watchMine: (uid, cb, onError) => onSnapshot(

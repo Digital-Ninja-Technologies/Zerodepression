@@ -279,6 +279,44 @@ await t('a counsellor can write their own presence, nobody else\'s', async () =>
   await assertFails(setDoc(doc(d, 'presence', 'c-tunde'), { lastSeen: serverTimestamp() }));
   await assertFails(setDoc(doc(d, 'presence', 'c-sarah'), { lastSeen: serverTimestamp(), name: 'Sarah' }));
 });
+await t('Online toggle: a counsellor can go online for up to 8 hours and back offline', async () => {
+  const d = staff('c-sarah', 'sarah@example.com');
+  const ref = doc(d, 'presence', 'c-sarah');
+  await assertSucceeds(setDoc(ref, { lastSeen: serverTimestamp(), onlineUntil: Timestamp.fromMillis(Date.now() + 8 * 3600000 - 60000) }));
+  await assertSucceeds(setDoc(ref, { lastSeen: serverTimestamp() }, { merge: true }));          // heartbeat keeps onlineUntil
+  await assertSucceeds(setDoc(ref, { lastSeen: serverTimestamp(), onlineUntil: null }, { merge: true }));   // toggle off
+  await assertFails(setDoc(ref, { lastSeen: serverTimestamp(), onlineUntil: Timestamp.fromMillis(Date.now() + 9 * 3600000) }));
+  await assertFails(setDoc(ref, { lastSeen: serverTimestamp(), onlineUntil: Timestamp.fromMillis(Date.now() - 60000) }));
+  await assertFails(setDoc(ref, { lastSeen: serverTimestamp(), onlineUntil: 'forever' }));
+});
+await t('a heartbeat still works after the 8 hours have run out', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'presence', 'c-sarah'),
+    { lastSeen: Timestamp.fromMillis(Date.now() - 600000), onlineUntil: Timestamp.fromMillis(Date.now() - 60000) }));
+  await assertSucceeds(setDoc(doc(staff('c-sarah', 'sarah@example.com'), 'presence', 'c-sarah'), { lastSeen: serverTimestamp() }, { merge: true }));
+});
+await t('deactivated counsellors cannot go online', () =>
+  assertFails(setDoc(doc(staff('c-gone', 'gone@example.com'), 'presence', 'c-gone'), { lastSeen: serverTimestamp(), onlineUntil: days(0.1) })));
+
+const sub = (over = {}) => ({ endpoint: 'https://fcm.googleapis.com/fcm/send/abc123', p256dh: 'BKey', auth: 'aKey', updatedAt: serverTimestamp(), ...over });
+await t('a counsellor can save, read and remove their own push subscription only', async () => {
+  const d = staff('c-sarah', 'sarah@example.com');
+  await assertSucceeds(setDoc(doc(d, 'pushSubs', 'c-sarah', 'devices', 'dev1'), sub()));
+  await assertSucceeds(getDoc(doc(d, 'pushSubs', 'c-sarah', 'devices', 'dev1')));
+  await assertSucceeds(deleteDoc(doc(d, 'pushSubs', 'c-sarah', 'devices', 'dev1')));
+  await assertFails(setDoc(doc(d, 'pushSubs', 'c-tunde', 'devices', 'dev1'), sub()));
+  await assertFails(setDoc(doc(d, 'pushSubs', 'c-sarah', 'devices', 'dev2'), sub({ endpoint: 'http://evil.example/x' })));
+  await assertFails(setDoc(doc(d, 'pushSubs', 'c-sarah', 'devices', 'dev3'), sub({ email: 'x@y.z' })));
+});
+await t('visitors and other counsellors cannot read push subscriptions', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'pushSubs', 'c-sarah', 'devices', 'dev1'), sub({ updatedAt: Timestamp.now() })));
+  await assertFails(getDoc(doc(anon('v13'), 'pushSubs', 'c-sarah', 'devices', 'dev1')));
+  await assertFails(getDoc(doc(staff('c-tunde', 'tunde@example.com'), 'pushSubs', 'c-sarah', 'devices', 'dev1')));
+  await assertFails(setDoc(doc(anon('v13'), 'pushSubs', 'v13', 'devices', 'dev1'), sub()));
+});
+await t('the alert log is closed to every client', async () => {
+  await assertFails(getDoc(doc(staff('c-boss', 'boss@example.com'), 'notifications', 'chat_x')));
+  await assertFails(setDoc(doc(anon('v14'), 'notifications', 'chat_v14'), { sentAt: serverTimestamp() }));
+});
 await t('a visitor cannot fake counsellor presence', () => assertFails(setDoc(doc(anon('v12'), 'presence', 'v12'), { lastSeen: serverTimestamp() })));
 await t('any other collection is closed', async () => {
   await assertFails(getDoc(doc(guest(), 'secrets', 'a')));

@@ -22,6 +22,15 @@
   var configured = !!(cfg && cfg.apiKey && cfg.projectId && !/^REPLACE/.test(cfg.apiKey));
   var fb = configured ? window.ZDFB.init(cfg) : null;
 
+  // Tells the site's alert sender that a new chat / request exists, so online counsellors get a push and email.
+  // Only the ID is sent; the sender reads the document itself and never forwards anything the visitor wrote.
+  function alertCounsellors(kind, id) {
+    try {
+      fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: kind, id: id }), keepalive: true }).catch(function () {});
+    } catch (e) { /* alerts are best-effort */ }
+  }
+
   var s = { uid: null, status: null, counsellor: null, online: undefined, unsubs: [], nodes: {}, lastSent: 0, busy: false,
             hasPreview: false, hbTimer: null, onlineTimer: null, unread: 0, baseTitle: document.title, firstChat: true, booted: false };
 
@@ -88,7 +97,7 @@
     var label = el.startBtn.textContent; el.startBtn.textContent = "Connecting…";
     var nick = el.nick.value.replace(/[<>\r\n\t]/g, "").trim().slice(0, 24) || "Friend";
     resetRoom();
-    fb.visitor.start(nick).then(function (uid) { enterRoom(uid); }, function (err) {
+    fb.visitor.start(nick).then(function (uid) { alertCounsellors("chat", uid); enterRoom(uid); }, function (err) {
       var code = (err && (err.code || "")).toString();
       el.startErr.textContent = START_ERRORS[code] || START_ERRORS[code.replace(/^.*\//, "")] ||
         "Something went wrong. Please try again, or call us on 0800 1100 2200 (free).";
@@ -330,7 +339,8 @@
       }
       if (!ct.consent.checked) { contactError("Please tick the box so we know it's OK to contact you."); ct.consent.focus(); return; }
       ct.submit.disabled = true;
-      fb.visitor.submitContact({ name: name, method: method, contact: contact, note: note }).then(function () {
+      fb.visitor.submitContact({ name: name, method: method, contact: contact, note: note }).then(function (reqId) {
+        if (reqId) alertCounsellors("contact", reqId);
         ct.doneText.textContent = "Thank you, " + name + ". Your request is now on our counsellors' dashboard. The first counsellor to accept it will follow up with you " + (CONTACT_KINDS[method] || CONTACT_KINDS.whatsapp).how + ".";
         ct.form.hidden = true; ct.done.hidden = false;
         ct.form.reset(); syncContactKind();

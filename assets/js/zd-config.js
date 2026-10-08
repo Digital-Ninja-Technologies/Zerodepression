@@ -14,3 +14,6 @@ window.ZD_FIREBASE_CONFIG = {
   messagingSenderId: "500091115635",
   appId: "1:500091115635:web:976925e6816b6e81013206",
 };
+
+/* Public Web Push key for counsellor alerts (the matching private key is a secret in Vercel). Public by design. */
+window.ZD_PUSH_PUBLIC_KEY = "BKnc-TkbsH6hVlUmzJoDvLJ3Q6Ve_McFCMctS6ZzQWTamw1-0xdtdoTY6tr8egK_04RszmdIWtLkL3TU_s6_dy8";

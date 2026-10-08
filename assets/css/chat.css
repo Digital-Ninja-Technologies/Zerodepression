@@ -769,3 +769,16 @@
     min-height: 88px;
   }
 }
+
+/* ---------------------------------------------------------------- Online toggle (counsellor inbox) */
+.online-ctl { display: grid; gap: 6px; }
+.online-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.switch { display: inline-flex; align-items: center; gap: 8px; padding: 4px 2px; background: none; border: 0; cursor: pointer; font: inherit; font-weight: 700; color: inherit; }
+.switch-track { position: relative; width: 46px; height: 26px; border-radius: 999px; background: #c9ccd6; transition: background .2s; flex: none; }
+.switch-knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.switch[aria-checked="true"] .switch-track { background: #1f9d55; }
+.switch[aria-checked="true"] .switch-knob { transform: translateX(20px); }
+.switch:focus-visible .switch-track { outline: 3px solid #ffa500; outline-offset: 2px; }
+.switch[disabled] { opacity: .6; cursor: progress; }
+#online-status[data-state="on"] { color: #1f7a45; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .switch-track, .switch-knob { transition: none; } }

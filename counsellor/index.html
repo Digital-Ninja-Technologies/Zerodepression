@@ -21,6 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="/assets/css/site.css"><link rel="stylesheet" href="/assets/css/chat.css"><meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="/counsellor/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ZD Inbox">
 <script>document.documentElement.classList.add('js')</script>
 
 
@@ -55,10 +58,16 @@
   <section id="view-inbox" hidden aria-label="Inbox">
     <h1 class="sr-only">Counsellor inbox</h1>
     <div class="side-card" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
-      <div><strong>Signed in as <span id="me-name"></span></strong><br><span class="fine">Keep this page open to receive alerts.</span></div>
+      <div class="online-ctl">
+        <strong>Signed in as <span id="me-name"></span></strong>
+        <div class="online-row">
+          <button id="online-toggle" class="switch" type="button" role="switch" aria-checked="false" aria-describedby="online-status"><span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span><span class="switch-label">Online</span></button>
+          <span id="online-status" class="fine">Offline. Switch on to stay online for up to 8 hours and get alerts even when this page is closed.</span>
+        </div>
+        <p id="online-hint" class="fine" hidden></p>
+      </div>
       <div class="room-actions">
         <a id="admin-link" class="btn-quiet" href="/admin-dashboard/" hidden>Manage counsellors</a>
-        <button id="alerts-btn" class="btn-quiet" type="button" aria-pressed="false">Turn on alerts</button>
         <button id="logout-btn" class="btn-quiet" type="button">Sign out</button>
       </div>
     </div>

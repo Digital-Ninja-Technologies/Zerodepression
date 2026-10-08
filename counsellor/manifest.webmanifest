@@ -1,0 +1,13 @@
+{
+  "name": "ZeroDepression counsellor inbox",
+  "short_name": "ZD Inbox",
+  "start_url": "/counsellor/",
+  "scope": "/counsellor/",
+  "display": "standalone",
+  "background_color": "#fffaf2",
+  "theme_color": "#fffaf2",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

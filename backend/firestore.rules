@@ -6,7 +6,10 @@ rules_version = '2';
 //   chats/{uid}                 one chat per anonymous visitor; the doc id IS the visitor's anonymous uid
 //   chats/{uid}/messages/{id}   the conversation (sender: 'user' | 'counsellor')
 //   counsellors/{email}         invite-only allow-list, managed by admins in /counsellor-admin/ (role: 'admin')
-//   presence/{uid}              heartbeat written by signed-in counsellors so visitors can see "online now"
+//   presence/{uid}              written by signed-in counsellors so visitors can see "online now": a heartbeat (lastSeen) while
+//                               the inbox is open, and onlineUntil (at most 8 hours ahead) while their Online toggle is on
+//   pushSubs/{uid}/devices/{id} a counsellor's Web Push subscriptions; only they can manage them, the alert sender reads them
+//   notifications/{id}          written only by the server-side alert sender (admin SDK); closed to every client
 //   contactRequests/{uid}       a visitor's optional "call me back" request (name + how to reach them); first counsellor to accept it wins
 //   contactRequests/{uid}/private/details   the visitor's phone/email and note, readable only by the counsellor who accepted, deleted when they finish
 //
@@ -83,11 +86,34 @@ service cloud.firestore {
 
     // ------------------------------------------------------------------ presence
     match /presence/{uid} {
-      allow read: if true;   // contains only a timestamp keyed by a random uid
+      allow read: if true;   // only timestamps keyed by a random uid
+
+      // onlineUntil may be cleared, left as it was (a heartbeat), or set to a time in the next 8 hours.
+      function onlineUntilOk() {
+        let u = request.resource.data.get('onlineUntil', null);
+        return u == null
+          || (resource != null && u == resource.data.get('onlineUntil', null))
+          || (u is timestamp && u > request.time && u <= request.time + duration.value(481, 'm'));
+      }
+
       allow create, update: if isCounsellor() && uid == request.auth.uid
-        && request.resource.data.keys().hasOnly(['lastSeen'])
-        && request.resource.data.lastSeen == request.time;
+        && request.resource.data.keys().hasOnly(['lastSeen', 'onlineUntil'])
+        && request.resource.data.lastSeen == request.time
+        && onlineUntilOk();
       allow delete: if isCounsellor() && uid == request.auth.uid;
+    }
+
+    // ------------------------------------------------------------------ push subscriptions
+    match /pushSubs/{uid}/devices/{deviceId} {
+      allow read, delete: if isCounsellor() && uid == request.auth.uid;
+      allow create, update: if isCounsellor() && uid == request.auth.uid
+        && deviceId.size() <= 64
+        && request.resource.data.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['endpoint', 'p256dh', 'auth', 'updatedAt'])
+        && request.resource.data.endpoint is string && request.resource.data.endpoint.matches('^https://.{8,800}$')
+        && request.resource.data.p256dh is string && request.resource.data.p256dh.size() <= 200
+        && request.resource.data.auth is string && request.resource.data.auth.size() <= 100
+        && request.resource.data.updatedAt == request.time;
     }
 
     // ------------------------------------------------------------------ chats
