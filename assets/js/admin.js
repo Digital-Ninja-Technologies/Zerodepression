@@ -28,6 +28,10 @@
 
   /* ------------------------------------------------------------ sign-in (email link, same as the inbox) */
   var LOGIN_ERRORS = {
+    "auth/quota-exceeded": "Firebase's daily limit for sign-in emails has been reached. Try again tomorrow, or an admin can sign in with email and password at /admin-dashboard/.",
+    "auth/missing-continue-uri": "This website isn't set up for sign-in links yet. Ask the admin to check Firebase Authentication settings.",
+    "auth/invalid-continue-uri": "This website isn't set up for sign-in links yet. Ask the admin to check Firebase Authentication settings.",
+    "auth/missing-email": "Please enter your email address.",
     "auth/invalid-email": "That doesn't look like a valid email address.",
     "auth/invalid-credential": "Incorrect email or password.",
     "auth/wrong-password": "Incorrect email or password.",
@@ -40,7 +44,10 @@
     "auth/expired-action-code": "That sign-in link has expired. Request a new one.",
     "auth/unauthorized-continue-uri": "This website isn't authorised for sign-in yet. Add it under Authentication > Settings > Authorized domains in Firebase.",
   };
-  function errText(err) { return LOGIN_ERRORS[err && err.code] || "Something went wrong. Please try again."; }
+  function errText(err) {
+    var code = err && err.code ? String(err.code) : "";
+    return LOGIN_ERRORS[code] || ("Something went wrong" + (code ? " (" + code.replace(/^auth\//, "") + ")" : "") + ". Please try again, and if it keeps happening tell an admin this message.");
+  }
 
   function finishLink(email) {
     completing = true; setBusy(true);
