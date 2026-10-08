@@ -327,6 +327,32 @@ p {
   text-decoration: underline;
 }
 
+/* The notice bar and the header stay pinned to the top together. */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.top-bar .site-header {
+  position: static;
+}
+
+html {
+  scroll-padding-top: 140px;
+}
+
+@media (max-width: 560px) {
+  .crisis-bar {
+    font-size: 0.8125rem;
+  }
+
+  .crisis-bar .container {
+    gap: 2px 14px;
+    padding-block: 6px;
+  }
+}
+
 .site-header {
   position: sticky;
   top: 0;
