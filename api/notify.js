@@ -18,9 +18,38 @@ const SITE = 'https://www.zerodepression.org';
 const FRESH_MS = 10 * 60 * 1000;   // only alert for chats/requests created in the last 10 minutes
 const INBOX_OPEN_MS = 2 * 60 * 1000;
 
+// Accepts the service-account JSON however it was pasted into Vercel: whole file, without the outer braces,
+// wrapped in quotes, prefixed with "FIREBASE_SERVICE_ACCOUNT=", or base64-encoded.
+function readServiceAccount(raw) {
+  let s = String(raw || '').trim();
+  if (!s) return null;
+  s = s.replace(/^FIREBASE_SERVICE_ACCOUNT\s*=\s*/, '').trim();
+  if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('`') && s.endsWith('`'))) s = s.slice(1, -1).trim();
+  const tries = [];
+  if (!s.includes('{') && /^[A-Za-z0-9+/=\s]+$/.test(s)) {
+    try { tries.push(Buffer.from(s, 'base64').toString('utf8').trim()); } catch (e) { /* not base64 */ }
+  }
+  tries.push(s);
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a !== -1 && b > a) tries.push(s.slice(a, b + 1));
+  tries.push('{' + s.replace(/,\s*$/, '') + '}');
+  for (const t of tries) {
+    try {
+      let v = JSON.parse(t);
+      if (typeof v === 'string') v = JSON.parse(v);
+      if (v && v.client_email && v.private_key) {
+        v.private_key = String(v.private_key).replace(/\\n/g, '\n');
+        return v;
+      }
+    } catch (e) { /* try the next shape */ }
+  }
+  const shape = 'length ' + s.length + ', starts with ' + JSON.stringify(s.slice(0, 1)) + ', has client_email: ' + s.includes('client_email') + ', has private_key: ' + s.includes('private_key');
+  throw new Error('FIREBASE_SERVICE_ACCOUNT is not a readable service-account JSON (' + shape + ')');
+}
+
 function app() {
   if (getApps().length) return getApps()[0];
-  const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || 'null');
+  const sa = readServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT);
   if (!sa) throw new Error('FIREBASE_SERVICE_ACCOUNT is not set');
   return initializeApp({ credential: cert(sa) });
 }
