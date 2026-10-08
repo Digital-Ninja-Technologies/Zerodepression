@@ -845,3 +845,59 @@
 .link-btn:focus-visible {
   text-decoration-thickness: 2px;
 }
+
+/* Room header buttons: one tidy row on phones instead of tall two-line pills */
+.call-btn .call-label-short {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .room-head {
+    gap: 10px;
+  }
+
+  .room-head > div:first-child {
+    min-width: 0;
+  }
+
+  .room-actions {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .room-actions > .btn-quiet {
+    min-width: 0;
+    min-height: 38px;
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .call-btn .call-label-long {
+    display: none;
+  }
+
+  .call-btn .call-label-short {
+    display: inline;
+  }
+
+  /* Counsellor inbox: name on its own line, the three actions share the full width below it */
+  #pane-room .room-head > div:first-child {
+    flex: 1 1 100%;
+  }
+
+  #pane-room .room-actions {
+    width: 100%;
+  }
+
+  #pane-room .room-actions > .btn-quiet {
+    flex: 1 1 0;
+    justify-content: center;
+    text-align: center;
+  }
+
+  #pane-room .room-actions > .btn-quiet[hidden] {
+    display: none;
+  }
+}

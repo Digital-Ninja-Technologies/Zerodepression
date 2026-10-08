@@ -49,7 +49,8 @@
     /* ---------------------------------------------------------- UI */
     var callBtn = el("button", "btn-quiet call-btn");
     callBtn.type = "button";
-    callBtn.innerHTML = PHONE + "<span>Request voice call</span>";
+    callBtn.innerHTML = PHONE + "<span class=\"call-label-long\">Request voice call</span><span class=\"call-label-short\">Voice call</span>";
+    callBtn.setAttribute("aria-label", "Request voice call");
     callBtn.hidden = true;
     if (opts.actions) opts.actions.insertBefore(callBtn, opts.actions.firstChild);
 

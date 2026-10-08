@@ -557,6 +557,10 @@
     el.release.hidden = false; el.close.hidden = false;
     el.msg.value = ""; el.msg.disabled = false;
     showPane("room");
+    // On a phone the room sits below the lists, so bring its header into view under the sticky site header.
+    if (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) {
+      try { el.room.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { el.room.scrollIntoView(); }
+    }
     var id = c.id;
     if (!s.voice && window.ZDCall) {
       s.voice = window.ZDCall({ fb: fb, role: "counsellor", actions: $("#pane-room .room-actions"), bar: el.log, notice: roomNotice,
