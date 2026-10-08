@@ -270,7 +270,8 @@
       ? "Accept this request to see their contact details. The first counsellor to accept follows up, and the request disappears for everyone else."
       : "Loading their details…";
     showPane("contact");
-    if (isNew) { el.ctAccept.focus(); return; }
+    revealPane(el.pane, isNew ? el.ctAccept : null);
+    if (isNew) return;
     showContactDetails(c);
   }
 
@@ -501,6 +502,17 @@
     el.pane.hidden = which !== "contact";
   }
 
+  // Phones and tablets stack the lists above the panel, so after tapping an item bring its panel into view
+  // (below the sticky header). Focus first without scrolling so the jump doesn't fight the smooth scroll.
+  function revealPane(pane, focusEl) {
+    if (focusEl) { try { focusEl.focus({ preventScroll: true }); } catch (e) { focusEl.focus(); } }
+    if (!pane || !(window.matchMedia && window.matchMedia("(max-width: 900px)").matches)) return;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(function () {
+      try { pane.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } catch (e) { pane.scrollIntoView(); }
+    });
+  }
+
   function unwatchChat() {
     if (s.voice) s.voice.detach();
     s.chatUnsubs.forEach(function (u) { try { u(); } catch (e) { /* ignore */ } }); s.chatUnsubs = [];
@@ -523,7 +535,7 @@
       el.pvCrisis.hidden = !c.crisis;
       el.pvText.textContent = c.preview ? "“" + c.preview + "”" : "They haven't written anything yet.";
       el.pvErr.hidden = true; el.take.disabled = false;
-      showPane("preview"); el.take.focus();
+      showPane("preview"); revealPane(el.preview, el.take);
     } else { openRoom(c); }
   }
 
@@ -557,10 +569,7 @@
     el.release.hidden = false; el.close.hidden = false;
     el.msg.value = ""; el.msg.disabled = false;
     showPane("room");
-    // On a phone the room sits below the lists, so bring its header into view under the sticky site header.
-    if (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) {
-      try { el.room.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { el.room.scrollIntoView(); }
-    }
+    revealPane(el.room);
     var id = c.id;
     if (!s.voice && window.ZDCall) {
       s.voice = window.ZDCall({ fb: fb, role: "counsellor", actions: $("#pane-room .room-actions"), bar: el.log, notice: roomNotice,
@@ -595,7 +604,8 @@
       if (list.length) el.log.scrollTop = el.log.scrollHeight;
       if (gotUser && document.hidden) beep(1);
     }, function () { el.conn.hidden = false; }));
-    el.msg.focus();
+    // On a phone, opening the keyboard straight away would cover the conversation; let them tap the box.
+    if (!(window.matchMedia && window.matchMedia("(max-width: 900px)").matches)) el.msg.focus();
   }
 
   /* ------------------------------------------------------------ replying + actions */
