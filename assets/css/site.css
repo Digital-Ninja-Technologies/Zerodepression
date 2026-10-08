@@ -2342,3 +2342,11 @@ dialog.lightbox img {
     max-width: 260px;
   }
 }
+
+/* Social follow buttons: the icon is a filled brand glyph, not a stroked outline */
+.btn .btn-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  stroke: none;
+}
