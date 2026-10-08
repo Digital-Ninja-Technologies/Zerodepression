@@ -11,7 +11,7 @@ Runs on Firebase **Authentication + Cloud Firestore** only. No Cloud Functions, 
 | **Counsellors** | Sign in with an **email link** (no password). They are let in only if their *verified* email has an active entry in the `counsellors` collection. |
 | **Security** | [`firestore.rules`](firestore.rules) is the whole security model: visitors can only touch their own chat, only approved counsellors can see the queue, only one counsellor can take a chat, nothing can be deleted by a client, and messages can't be forged. 72 automated tests cover it. |
 | **Live updates** | Firestore pushes new messages instantly (no polling). |
-| **Retention** | Every chat and message carries an `expireAt` date 7 days out; a Firestore TTL policy deletes them automatically. |
+| **Retention** | Every chat and message carries an `expireAt` date 7 days out. A Firestore TTL policy (Blaze plan only) can delete them automatically; it is not set up yet. |
 | **Frontend** | `assets/js/chat.js` (visitor), `counsellor.js` (inbox), `zd-config.js` (your project's public config), and `assets/js/vendor/zd-firebase.js` (the Firebase SDK, bundled from `src/zd-firebase.js` so the site loads nothing from Google's CDN). |
 
 ## One-time setup (about 10 minutes, in the Firebase console)
@@ -33,7 +33,8 @@ Until step 1 is done the chat pages show a safe "chat isn't available yet, pleas
    - collection group **`chats`**, timestamp field **`expireAt`**
    - collection group **`messages`**, timestamp field **`expireAt`**
 
-   Without these the site's "messages are deleted after about 7 days" promise is not true.
+   TTL needs the **Blaze** (pay-as-you-go) plan. On the free Spark plan nothing is deleted automatically, so the site
+   makes no promise about deletion.
 6. **Create the first admin.** Firestore → *Start collection* **`counsellors`**. Add a document whose **Document ID is
    your email in lowercase** with fields `displayName` (string), `active` (boolean, `true`) and `role` (string, `admin`).
    After that, sign in at `/admin-dashboard/` to add, rename, deactivate and promote counsellors; no more console work.
