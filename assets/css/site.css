@@ -686,8 +686,17 @@ html {
     right: -2%;
   }
 
+  /* keep the "Your identity stays private" card on phones, tucked in a little so it never touches the screen edge */
   .float-card--b {
-    display: none;
+    left: -10px;
+    top: 7%;
+    max-width: calc(100% - 20px);
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+  }
+
+  .float-card--b strong {
+    font-size: 0.875rem;
   }
 }
 
