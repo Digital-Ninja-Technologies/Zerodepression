@@ -216,7 +216,10 @@
       if (!profile || profile.role !== "admin") {
         fb.staff.signOut().catch(function () {});
         showView("login");
-        loginMessage("error", profile ? "This account isn't an admin. Counsellors sign in at /counsellor/." : "This email isn't on the counsellor list.");
+        var who = (user.email || "").toLowerCase();
+        loginMessage("error", profile
+          ? who + " is a counsellor, not an admin. Counsellors sign in at /counsellor/."
+          : who + " isn't registered as an admin. In Firebase, open Firestore > counsellors and add a document whose ID is exactly " + who + " with active (boolean) = true and role (string) = admin.");
         return;
       }
       loginMessage("", "");
