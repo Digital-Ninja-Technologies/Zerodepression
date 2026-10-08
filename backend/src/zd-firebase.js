@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import {
   initializeFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, updateDoc, collection, query, where,
-  orderBy, onSnapshot, getDocs, writeBatch, serverTimestamp, increment, Timestamp, deleteDoc,
+  orderBy, onSnapshot, getDocs, writeBatch, serverTimestamp, increment, Timestamp, deleteDoc, limit,
 } from 'firebase/firestore';
 
 const KEEP_DAYS = 7;
@@ -59,6 +59,31 @@ function init(config) {
 
   const watchChat = (uid, cb, onError) =>
     onSnapshot(chatRef(uid), (s) => cb(s.exists() ? plain(s) : null), onError);
+
+  // ------------------------------------------------------------------ voice calls (WebRTC signalling, both sides)
+  const callsCol = (chatId) => collection(db, 'chats', chatId, 'calls');
+  const calls = {
+    newId: (chatId) => doc(callsCol(chatId)).id,
+    start: (chatId, id, role, offer) => setDoc(doc(callsCol(chatId), id), {
+      caller: role, state: 'ringing', offer: { type: offer.type, sdp: offer.sdp }, answer: null, endedBy: null,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(), expireAt: inDays(KEEP_DAYS),
+    }),
+    answer: (chatId, id, answer) => updateDoc(doc(callsCol(chatId), id), {
+      state: 'active', answer: { type: answer.type, sdp: answer.sdp }, updatedAt: serverTimestamp(),
+    }),
+    end: (chatId, id, role, state) => updateDoc(doc(callsCol(chatId), id), { state, endedBy: role, updatedAt: serverTimestamp() }),
+    addIce: (chatId, id, role, candidate) => setDoc(doc(collection(db, 'chats', chatId, 'calls', id, 'ice')), {
+      from: role, candidate: JSON.stringify(candidate), createdAt: serverTimestamp(), expireAt: inDays(KEEP_DAYS),
+    }),
+    watchLatest: (chatId, cb, onError) => onSnapshot(
+      query(callsCol(chatId), orderBy('createdAt', 'desc'), limit(1)),
+      (snap) => cb(snap.docs.length ? plain(snap.docs[0]) : null), onError),
+    watchIce: (chatId, id, from, cb, onError) => onSnapshot(
+      query(collection(db, 'chats', chatId, 'calls', id, 'ice'), where('from', '==', from)),
+      (snap) => cb(snap.docChanges().filter((c) => c.type === 'added').map((c) => {
+        try { return JSON.parse(c.doc.data().candidate); } catch (e) { return null; }
+      }).filter(Boolean)), onError),
+  };
 
   // ------------------------------------------------------------------ visitor
   const visitor = {
@@ -219,7 +244,7 @@ function init(config) {
     update: (email, fields) => updateDoc(doc(db, 'counsellors', email), fields),
   };
 
-  return { visitor, staff, admin, ms };
+  return { visitor, staff, admin, calls, ms };
 }
 
 window.ZDFB = { init };

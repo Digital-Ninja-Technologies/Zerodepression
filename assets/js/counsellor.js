@@ -451,7 +451,18 @@
     el.pane.hidden = which !== "contact";
   }
 
-  function unwatchChat() { s.chatUnsubs.forEach(function (u) { try { u(); } catch (e) { /* ignore */ } }); s.chatUnsubs = []; }
+  function unwatchChat() {
+    if (s.voice) s.voice.detach();
+    s.chatUnsubs.forEach(function (u) { try { u(); } catch (e) { /* ignore */ } }); s.chatUnsubs = [];
+  }
+
+  function roomNotice(text) {
+    var div = document.createElement("div");
+    div.className = "bubble bubble--system";
+    div.textContent = text;
+    el.log.appendChild(div);
+    el.log.scrollTop = el.log.scrollHeight;
+  }
 
   function select(kind, c) {
     unwatchChat();
@@ -497,9 +508,15 @@
     el.msg.value = ""; el.msg.disabled = false;
     showPane("room");
     var id = c.id;
+    if (!s.voice && window.ZDCall) {
+      s.voice = window.ZDCall({ fb: fb, role: "counsellor", actions: $("#pane-room .room-actions"), bar: el.log, notice: roomNotice,
+        otherName: function () { return el.title.textContent || "The visitor"; } });
+    }
+    if (s.voice) { s.voice.attach(id); s.voice.setAvailable(false); }
     s.chatUnsubs.push(fb.staff.watchChat(id, function (chat) {
       if (!chat || (chat.status !== "closed" && chat.counsellorUid !== s.user.uid)) { s.sel = null; showPane("empty"); unwatchChat(); return; }
       if (chat.crisis) el.crisis.hidden = false;
+      if (s.voice) s.voice.setAvailable(chat.status === "active" && chat.counsellorUid === s.user.uid);
       if (chat.status === "closed") {
         el.ended.hidden = false; el.composer.hidden = true; el.meta.hidden = true;
         el.release.hidden = true; el.close.hidden = true; el.sub.textContent = "Chat ended";

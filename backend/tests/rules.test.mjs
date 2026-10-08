@@ -460,6 +460,49 @@ await t('details cannot be deleted on their own, and nobody can delete a request
 
 
 await env.cleanup();
+// ============================================================ voice calls
+const offer = { type: 'offer', sdp: 'v=0 fake offer' };
+const answer = { type: 'answer', sdp: 'v=0 fake answer' };
+const newCall = (caller, over = {}) => ({ caller, state: 'ringing', offer, answer: null, endedBy: null,
+  createdAt: serverTimestamp(), updatedAt: serverTimestamp(), expireAt: days(7), ...over });
+async function activeChat(uid, counsellorUid = 'c-sarah') {
+  await env.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'chats', uid),
+    { ...newChat(uid), status: 'active', counsellorUid, counsellorName: 'Sarah', createdAt: Timestamp.now(), lastActivity: Timestamp.now(),
+      visitorSeen: Timestamp.now(), lastUserMsgAt: Timestamp.now(), claimedAt: Timestamp.now() }));
+}
+await reset();
+await t('voice: visitor can call their counsellor, counsellor can answer, either can end', async () => {
+  await activeChat('v20');
+  const v = anon('v20'), c = staff('c-sarah', 'sarah@example.com');
+  const ref = (db) => doc(db, 'chats', 'v20', 'calls', 'call1');
+  await assertSucceeds(setDoc(ref(v), newCall('user')));
+  await assertSucceeds(setDoc(doc(collection(ref(v), 'ice')), { from: 'user', candidate: '{"candidate":"x"}', createdAt: serverTimestamp(), expireAt: days(7) }));
+  await assertSucceeds(updateDoc(ref(c), { state: 'active', answer, updatedAt: serverTimestamp() }));
+  await assertSucceeds(setDoc(doc(collection(ref(c), 'ice')), { from: 'counsellor', candidate: '{"candidate":"y"}', createdAt: serverTimestamp(), expireAt: days(7) }));
+  await assertSucceeds(getDocs(collection(ref(c), 'ice')));
+  await assertSucceeds(updateDoc(ref(v), { state: 'ended', endedBy: 'user', updatedAt: serverTimestamp() }));
+});
+await t('voice: outsiders cannot see, join or start calls', async () => {
+  await activeChat('v21');
+  const ref = (db) => doc(db, 'chats', 'v21', 'calls', 'call1');
+  await assertFails(setDoc(ref(anon('v22')), newCall('user')));
+  await assertFails(setDoc(ref(staff('c-tunde', 'tunde@example.com')), newCall('counsellor')));
+  await assertSucceeds(setDoc(ref(anon('v21')), newCall('user')));
+  await assertFails(getDoc(ref(anon('v22'))));
+  await assertFails(getDoc(ref(staff('c-tunde', 'tunde@example.com'))));
+  await assertFails(updateDoc(ref(staff('c-tunde', 'tunde@example.com')), { state: 'active', answer, updatedAt: serverTimestamp() }));
+});
+await t('voice: no spoofing the caller, answering your own call, or calling in a waiting chat', async () => {
+  await activeChat('v23');
+  const v = anon('v23');
+  await assertFails(setDoc(doc(v, 'chats', 'v23', 'calls', 'a'), newCall('counsellor')));
+  await assertSucceeds(setDoc(doc(v, 'chats', 'v23', 'calls', 'b'), newCall('user')));
+  await assertFails(updateDoc(doc(v, 'chats', 'v23', 'calls', 'b'), { state: 'active', answer, updatedAt: serverTimestamp() }));
+  await assertFails(setDoc(doc(collection(doc(v, 'chats', 'v23', 'calls', 'b'), 'ice')), { from: 'counsellor', candidate: 'x', createdAt: serverTimestamp(), expireAt: days(7) }));
+  await env.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'chats', 'v24'), { ...newChat('v24'), createdAt: Timestamp.now(), lastActivity: Timestamp.now(), visitorSeen: Timestamp.now(), lastUserMsgAt: Timestamp.now() }));
+  await assertFails(setDoc(doc(anon('v24'), 'chats', 'v24', 'calls', 'c'), newCall('user')));
+});
+
 const pass = results.filter(Boolean).length;
 console.log(`\n${pass}/${results.length} passed`);
 process.exit(pass === results.length ? 0 : 1);

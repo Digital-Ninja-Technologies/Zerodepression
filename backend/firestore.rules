@@ -5,6 +5,7 @@ rules_version = '2';
 // Model
 //   chats/{uid}                 one chat per anonymous visitor; the doc id IS the visitor's anonymous uid
 //   chats/{uid}/messages/{id}   the conversation (sender: 'user' | 'counsellor')
+//   chats/{uid}/calls/{id}      voice-call signalling (offer/answer + ice/{id} candidates) between the visitor and their counsellor
 //   counsellors/{email}         invite-only allow-list, managed by admins in /counsellor-admin/ (role: 'admin')
 //   presence/{uid}              written by signed-in counsellors so visitors can see "online now": a heartbeat (lastSeen) while
 //                               the inbox is open, and onlineUntil (at most 8 hours ahead) while their Online toggle is on
@@ -253,6 +254,63 @@ service cloud.firestore {
             && request.resource.data.sender == 'counsellor' && shapeOk());
 
         allow update, delete: if false;
+      }
+
+      // -------------------------------------------------------------- voice calls (WebRTC signalling)
+      // Only the visitor and the counsellor who took this chat can see or join its calls. The documents carry
+      // only connection details (SDP offer/answer and ICE candidates), never audio, and are removed by TTL.
+      match /calls/{callId} {
+        function chatNow() { return get(/databases/$(database)/documents/chats/$(chatId)).data; }
+        function party() {
+          return (isAnon() && request.auth.uid == chatId) ? 'user'
+            : ((isCounsellor() && chatNow().counsellorUid == request.auth.uid) ? 'counsellor' : '');
+        }
+        function validSdp(x, t) {
+          return x is map && x.keys().hasOnly(['type', 'sdp']) && x.type == t
+            && x.sdp is string && x.sdp.size() > 0 && x.sdp.size() <= 20000;
+        }
+
+        allow read: if party() != '';
+
+        allow create: if party() != '' && chatNow().status == 'active'
+          && request.resource.data.keys().hasOnly(['caller', 'state', 'offer', 'answer', 'endedBy', 'createdAt', 'updatedAt', 'expireAt'])
+          && request.resource.data.keys().hasAll(['caller', 'state', 'offer', 'answer', 'endedBy', 'createdAt', 'updatedAt', 'expireAt'])
+          && request.resource.data.caller == party()
+          && request.resource.data.state == 'ringing'
+          && validSdp(request.resource.data.offer, 'offer')
+          && request.resource.data.answer == null
+          && request.resource.data.endedBy == null
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && boundedExpiry(request.resource.data.expireAt);
+
+        allow update: if party() != '' && request.resource.data.updatedAt == request.time && (
+          // the other side answers a ringing call
+          (resource.data.state == 'ringing' && resource.data.caller != party() && chatNow().status == 'active'
+            && changed().hasOnly(['state', 'answer', 'updatedAt'])
+            && request.resource.data.state == 'active'
+            && validSdp(request.resource.data.answer, 'answer'))
+          // either side ends, declines or gives up on it
+          || (resource.data.state in ['ringing', 'active']
+            && changed().hasOnly(['state', 'endedBy', 'updatedAt'])
+            && request.resource.data.state in ['ended', 'declined', 'missed', 'failed']
+            && request.resource.data.endedBy == party())
+        );
+
+        allow delete: if false;
+
+        match /ice/{iceId} {
+          allow read: if party() != '';
+          allow create: if party() != ''
+            && request.resource.data.keys().hasOnly(['from', 'candidate', 'createdAt', 'expireAt'])
+            && request.resource.data.keys().hasAll(['from', 'candidate', 'createdAt', 'expireAt'])
+            && request.resource.data.from == party()
+            && request.resource.data.candidate is string && request.resource.data.candidate.size() <= 2000
+            && request.resource.data.createdAt == request.time
+            && boundedExpiry(request.resource.data.expireAt)
+            && get(/databases/$(database)/documents/chats/$(chatId)/calls/$(callId)).data.state in ['ringing', 'active'];
+          allow update, delete: if false;
+        }
       }
     }
 

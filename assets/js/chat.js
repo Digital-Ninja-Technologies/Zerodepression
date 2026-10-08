@@ -21,6 +21,7 @@
   var cfg = window.ZD_FIREBASE_CONFIG;
   var configured = !!(cfg && cfg.apiKey && cfg.projectId && !/^REPLACE/.test(cfg.apiKey));
   var fb = configured ? window.ZDFB.init(cfg) : null;
+  var voice = null;   // live voice call (assets/js/voice-call.js), set up once the room exists
 
   // Tells the site's alert sender that a new chat / request exists, so online counsellors get a push and email.
   // Only the ID is sent; the sender reads the document itself and never forwards anything the visitor wrote.
@@ -48,6 +49,7 @@
   function unsubAll() { s.unsubs.forEach(function (u) { try { u(); } catch (e) { /* ignore */ } }); s.unsubs = []; }
 
   function resetRoom() {
+    if (voice) voice.detach();
     unsubAll();
     clearInterval(s.hbTimer);
     s.uid = s.status = s.counsellor = null; s.nodes = {}; s.unread = 0; s.hasPreview = false; s.firstChat = true;
@@ -108,6 +110,11 @@
   function enterRoom(uid) {
     resetRoom();
     s.uid = uid;
+    if (!voice && window.ZDCall && fb) {
+      voice = window.ZDCall({ fb: fb, role: "user", actions: document.querySelector("#view-room .room-actions"), bar: el.log,
+        notice: addNotice, otherName: function () { return s.counsellor || "Your counsellor"; } });
+    }
+    if (voice) voice.attach(uid);
     s.lastSent = Date.now();                          // the server's throttle also counts from chat creation
     show("room");
     addNotice("You're connected anonymously. A volunteer counsellor will join you shortly. You can start typing now.");
@@ -195,6 +202,7 @@
 
   function setStatus(status) {
     s.status = status;
+    if (voice) voice.setAvailable(status === "active");
     if (status === "waiting") {
       el.title.textContent = "Waiting for a counsellor";
       el.sub.textContent = "Anonymous · free";
