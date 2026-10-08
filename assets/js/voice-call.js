@@ -49,7 +49,7 @@
     /* ---------------------------------------------------------- UI */
     var callBtn = el("button", "btn-quiet call-btn");
     callBtn.type = "button";
-    callBtn.innerHTML = PHONE + "<span>Voice call</span>";
+    callBtn.innerHTML = PHONE + "<span>Request voice call</span>";
     callBtn.hidden = true;
     if (opts.actions) opts.actions.insertBefore(callBtn, opts.actions.firstChild);
 
@@ -194,7 +194,7 @@
     callBtn.addEventListener("click", function () {
       if (st.busy || st.pc || !st.chatId || !st.available) return;
       st.busy = true; callBtn.hidden = true;
-      showBar("Starting a voice call…", [], "");
+      showBar("Sending your call request…", [], "");
       var chatId = st.chatId, callId = fb.calls.newId(chatId);
       navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false }).then(function (stream) {
         st.stream = stream; st.callId = callId; st.handled[callId] = false;
@@ -206,8 +206,8 @@
       }).then(function () {
         st.busy = false;
         ring(true);
-        showBar("Calling " + otherName() + "…", [button("Cancel", "btn-ghost", function () { endCall("missed", "You cancelled the call."); })], "ringing");
-        st.ringTimer = setTimeout(function () { endCall("missed", otherName() + " didn't answer the call. You can keep chatting here."); }, RING_MS);
+        showBar("Call request sent. Waiting for " + otherName() + " to accept…", [button("Cancel request", "btn-ghost", function () { endCall("missed", "You cancelled the call request."); })], "ringing");
+        st.ringTimer = setTimeout(function () { endCall("missed", otherName() + " didn't respond to your call request. You can keep chatting here."); }, RING_MS);
       }, function (err) {
         cleanup();
         say(err && err.name ? micError(err) : "We couldn't start the call. Please try again.");
@@ -229,7 +229,7 @@
           }, CONNECT_MS);
           st.pc.setRemoteDescription(c.answer).then(flushIce, function () { endCall("failed", "The call couldn't connect. Please try again."); });
         } else if (c.state === "declined" && st.pc) {
-          st.handled[c.id] = true; cleanup(); say(otherName() + " can't take a call right now. You can keep chatting here.");
+          st.handled[c.id] = true; cleanup(); say(otherName() + " declined the call request. You can keep chatting here.");
         } else if ((c.state === "ended" || c.state === "failed" || c.state === "missed") && st.pc) {
           var live = st.startedAt ? Date.now() - st.startedAt : 0;
           st.handled[c.id] = true; cleanup(); say(live ? "Voice call ended · " + mmss(live) + "." : "The call ended.");
@@ -243,15 +243,15 @@
           st.callId = c.id;
           ring(true);
           if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-            try { new Notification(otherName() + " is calling", { body: "Open the chat to answer.", tag: "zd-call" }); } catch (e) { /* ignore */ }
+            try { new Notification(otherName() + " wants to start a voice call", { body: "Open the chat to accept or decline.", tag: "zd-call" }); } catch (e) { /* ignore */ }
           }
-          var accept = button("Answer", "btn-primary", function () { answer(c); });
+          var accept = button("Accept call", "btn-primary", function () { answer(c); });
           var decline = button("Decline", "btn-ghost", function () {
             st.handled[c.id] = true; ring(false); hideBar();
             fb.calls.end(st.chatId, c.id, role, "declined").catch(function () {});
             renderButton();
           });
-          showBar(otherName() + " is calling you", [accept, decline], "ringing");
+          showBar(otherName() + " is requesting a voice call. Accept to start talking?", [accept, decline], "ringing");
         } else if (c.id === st.callId && (c.state === "ended" || c.state === "missed" || c.state === "failed" || c.state === "declined")) {
           var was = st.startedAt ? Date.now() - st.startedAt : 0, hadUi = !bar.hidden;
           st.handled[c.id] = true; cleanup();
