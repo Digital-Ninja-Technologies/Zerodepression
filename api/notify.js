@@ -33,16 +33,26 @@ function readServiceAccount(raw) {
   const a = s.indexOf('{'), b = s.lastIndexOf('}');
   if (a !== -1 && b > a) tries.push(s.slice(a, b + 1));
   tries.push('{' + s.replace(/,\s*$/, '') + '}');
+  // Not secret: the project's Firebase Admin SDK service account (Firebase console > Service accounts).
+  const fallbackEmail = process.env.FIREBASE_CLIENT_EMAIL || 'firebase-adminsdk-fbsvc@zerodepression.iam.gserviceaccount.com';
+  const fallbackProject = process.env.FIREBASE_PROJECT_ID || 'zerodepression';
+  const finish = (v) => ({
+    ...v,
+    project_id: v.project_id || fallbackProject,
+    client_email: v.client_email || fallbackEmail,
+    private_key: String(v.private_key).replace(/\\n/g, '\n'),
+  });
   for (const t of tries) {
     try {
       let v = JSON.parse(t);
-      if (typeof v === 'string') v = JSON.parse(v);
-      if (v && v.client_email && v.private_key) {
-        v.private_key = String(v.private_key).replace(/\\n/g, '\n');
-        return v;
+      if (typeof v === 'string') {
+        if (v.includes('BEGIN PRIVATE KEY')) return finish({ private_key: v });   // just the key, quoted
+        v = JSON.parse(v);
       }
+      if (v && v.private_key) return finish(v);   // whole file, or only part of it
     } catch (e) { /* try the next shape */ }
   }
+  if (s.includes('BEGIN PRIVATE KEY') && !s.includes('{') && !s.includes('"')) return finish({ private_key: s });
   const shape = 'length ' + s.length + ', starts with ' + JSON.stringify(s.slice(0, 1)) + ', has client_email: ' + s.includes('client_email') + ', has private_key: ' + s.includes('private_key');
   throw new Error('FIREBASE_SERVICE_ACCOUNT is not a readable service-account JSON (' + shape + ')');
 }
