@@ -2194,3 +2194,39 @@ dialog.lightbox img {
   outline: 3px solid var(--amber);
   outline-offset: 2px;
 }
+
+/* Footer: "Chat with a counsellor" button with a FREE badge overlaid on its top edge */
+.site-footer .footer-chat-item {
+  padding-top: 12px;
+}
+
+.site-footer a.footer-chat {
+  position: relative;
+  display: inline-flex;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.site-footer a.footer-chat:hover {
+  background: #ffb629;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.free-badge {
+  position: absolute;
+  top: -14px;
+  right: 12px;
+  padding: 3px 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sage);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
