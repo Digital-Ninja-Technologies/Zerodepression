@@ -823,3 +823,25 @@
 .btn-danger-solid:hover {
   background: #8f1d17;
 }
+
+/* Feedback prompt after a chat ends */
+.ended-feedback {
+  margin: 0;
+}
+
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.link-btn:hover,
+.link-btn:focus-visible {
+  text-decoration-thickness: 2px;
+}

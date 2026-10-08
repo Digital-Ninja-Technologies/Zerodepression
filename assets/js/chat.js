@@ -363,10 +363,19 @@
 
   /* ------------------------------------------------------------ quick exit (button or Esc twice) */
   function quickExit() {
+    var going = false;
+    function go() {
+      if (going) return; going = true;
+      try { sessionStorage.clear(); localStorage.removeItem("zd_staff_email"); } catch (e) { /* ignore */ }
+      if (fb) { fb.visitor.leave().catch(function () {}); }
+      window.location.replace("/");
+    }
     unsubAll();
-    try { sessionStorage.clear(); localStorage.removeItem("zd_staff_email"); } catch (e) { /* ignore */ }
-    if (fb) { fb.visitor.leave().catch(function () {}); }
-    window.location.replace("/");
+    // End an open chat first so the counsellor is told the visitor has left, but never hold up leaving for long.
+    if (fb && s.uid && (s.status === "active" || s.status === "waiting")) {
+      fb.visitor.end(s.uid).then(go, go);
+      setTimeout(go, 900);
+    } else { go(); }
   }
   // The button asks first (it is easy to hit by accident); pressing Esc twice is a deliberate shortcut and leaves at once.
   var exitDialog = $("#exit-dialog");

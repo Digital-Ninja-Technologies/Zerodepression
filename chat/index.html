@@ -111,6 +111,7 @@
       <div id="log" class="log" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></div>
       <div id="ended" class="ended" hidden>
         <p style="margin:0"><strong>This chat has ended.</strong> Thank you for reaching out.</p>
+        <p class="ended-feedback">How was your chat? <button type="button" class="link-btn" data-open-dialog="feedback-dialog">Share anonymous feedback</button> <span class="fine">(about 2 minutes, it helps us support people better)</span></p>
         <div class="hero-actions">
           <button id="again-btn" class="btn btn-primary" type="button">Start a new chat</button>
           <button id="clear-btn" class="btn-quiet" type="button">Clear this conversation from this device</button>
@@ -153,6 +154,11 @@
       <button class="btn btn-primary" type="button" data-close-dialog>Close</button>
     </div>
   </div>
+</dialog>
+<dialog class="modal" id="feedback-dialog" aria-labelledby="feedback-title">
+  <div class="modal-head"><span id="feedback-title">Share your experience</span>
+    <button class="modal-close" type="button" data-close-dialog aria-label="Close">&times;</button></div>
+  <iframe data-src="https://docs.google.com/forms/d/e/1FAIpQLSfow6g_O956FlusrV7WK2yo_bQu8Mndad2cavBtOT3PZ3mkMA/viewform?embedded=true" title="Feedback form" loading="lazy">Loading…</iframe>
 </dialog>
 <dialog class="modal modal--confirm" id="exit-dialog" aria-labelledby="exit-title" aria-describedby="exit-text">
   <div class="modal-head"><span id="exit-title">Leave this page now?</span>

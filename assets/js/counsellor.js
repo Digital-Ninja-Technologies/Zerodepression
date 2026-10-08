@@ -135,7 +135,7 @@
     beat(); s.beatTimer = setInterval(beat, BEAT);
     s.renderTimer = setInterval(renderLists, 15000);
     s.unsubs.push(fb.staff.watchWaiting(function (list) { s.waiting = list; el.conn.hidden = true; onQueue(); }, onQueueError));
-    s.unsubs.push(fb.staff.watchMine(user.uid, function (list) { s.mine = list; renderLists(); }, onQueueError));
+    s.unsubs.push(fb.staff.watchMine(user.uid, function (list) { var before = s.mine; s.mine = list; renderLists(); checkGone(before, list); }, onQueueError));
     s.unsubs.push(fb.staff.watchNewContacts(function (list) { s.contacts = list; onContacts(); }, onQueueError));
     s.unsubs.push(fb.staff.watchMyContacts(user.uid, function (list) { s.followups = list; renderContacts(); }, onQueueError));
     s.unsubs.push(fb.staff.watchPresence(user.uid, function (p) { s.onlineUntil = p.onlineUntil; renderOnline(); }, function () {}));
@@ -441,6 +441,56 @@
         });
       } catch (e) { /* ignore */ }
     }
+  }
+
+  /* ------------------------------------------------------------ "visitor ended the chat" popup */
+  // A chat drops out of "my chats" when it's closed or handed back. Look it up once; if the visitor closed it, tell
+  // the counsellor with a popup (plus a sound, and a system notification when the tab is in the background).
+  var endedDialog = $("#ended-dialog"), endedQueue = [], endedShowing = null;
+  function checkGone(before, now) {
+    if (!s.user) return;
+    var still = {};
+    now.forEach(function (c) { still[c.id] = true; });
+    before.forEach(function (c) {
+      if (still[c.id]) return;
+      var done = false, unsub = null;
+      unsub = fb.staff.watchChat(c.id, function (chat) {
+        if (done) return; done = true;
+        setTimeout(function () { if (unsub) unsub(); }, 0);
+        if (chat && chat.status === "closed" && chat.closedBy === "user") visitorEnded(c);
+      }, function () { done = true; });
+    });
+  }
+  function visitorEnded(c) {
+    beep(2);
+    var name = c.nickname || "The visitor";
+    if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
+      try { new Notification("Chat ended", { body: name + " has ended the chat.", tag: "zd-ended-" + c.id }); } catch (e) { /* ignore */ }
+    }
+    endedQueue.push(c);
+    if (!endedShowing) showNextEnded();
+  }
+  function showNextEnded() {
+    var c = endedQueue.shift();
+    endedShowing = c || null;
+    if (!c) return;
+    var name = c.nickname || "The visitor";
+    if (!endedDialog || typeof endedDialog.showModal !== "function") {
+      window.alert(name + " has ended the chat."); endedShowing = null; showNextEnded(); return;
+    }
+    $("#ended-text").textContent = name + " has ended the chat. You don't need to do anything else. The chat has been moved out of your active list.";
+    $("#ended-view").hidden = !!(s.sel && s.sel.id === c.id);
+    if (!endedDialog.open) endedDialog.showModal();
+    $("#ended-ok").focus();
+  }
+  if (endedDialog) {
+    endedDialog.addEventListener("close", function () { setTimeout(showNextEnded, 150); });
+    $("#ended-view").addEventListener("click", function () {
+      var c = endedShowing;
+      endedQueue = endedQueue.filter(function (x) { return !c || x.id !== c.id; });
+      endedDialog.close();
+      if (c) select("ended", c);
+    });
   }
 
   /* ------------------------------------------------------------ panes + selecting */

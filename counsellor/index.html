@@ -147,6 +147,17 @@
 </main>
 <footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">Confidential. Do not share what visitors tell you outside this inbox.</p></div></footer>
 
+<dialog class="modal modal--confirm" id="ended-dialog" aria-labelledby="ended-title" aria-describedby="ended-text">
+  <div class="modal-head"><span id="ended-title">Chat ended</span>
+    <button class="modal-close" type="button" data-close-dialog aria-label="Close">&times;</button></div>
+  <div class="modal-body">
+    <p id="ended-text" style="margin-top:0">The visitor has ended the chat.</p>
+    <div class="modal-actions">
+      <button id="ended-ok" class="btn btn-primary" type="button" data-close-dialog>OK</button>
+      <button id="ended-view" class="btn-quiet" type="button">View the conversation</button>
+    </div>
+  </div>
+</dialog>
 <script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/voice-call.js" defer></script><script src="/assets/js/counsellor.js" defer></script>
 </body>
 </html>
