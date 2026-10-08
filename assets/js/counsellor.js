@@ -65,6 +65,19 @@
     return LOGIN_ERRORS[code] || ("Something went wrong" + (code ? " (" + code.replace(/^auth\//, "") + ")" : "") + ". Please try again, and if it keeps happening tell an admin this message.");
   }
 
+  // Sends the sign-in email from our own domain (api/staff-link.js), so staff sign-in isn't capped by Firebase's
+  // small daily email allowance. Falls back to Firebase's own email if our sender is unavailable.
+  function sendStaffLink(email, page, continueUrl) {
+    function fail(code) { var e = new Error(code); e.code = code; throw e; }
+    return fetch("/api/staff-link", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, page: page }) }).then(function (r) {
+      if (r.ok) return;
+      if (r.status === 400) fail("auth/invalid-email");
+      if (r.status === 429) fail("auth/too-many-requests");
+      return fb.staff.sendLink(email, continueUrl);
+    }, function () { return fb.staff.sendLink(email, continueUrl); });
+  }
+
   var completing = false;
   function finishLink(email) {
     completing = true;
@@ -83,7 +96,7 @@
     if (!email) { loginMessage("error", "Please enter your email address."); return; }
     if (fb.staff.isLink(location.href)) { finishLink(email); return; }   // opened a link on another device
     loginMessage("", ""); el.loginBtn.disabled = true;
-    fb.staff.sendLink(email, location.origin + "/counsellor/").then(function () {
+    sendStaffLink(email, "counsellor", location.origin + "/counsellor/").then(function () {
       try { localStorage.setItem(EMAIL_KEY, email); } catch (e2) { /* ignore */ }
       loginMessage("info", "Check your email for a sign-in link, then open it on this device. It can take a minute.");
     }, function (err) { loginMessage("error", errText(err)); }).then(function () { el.loginBtn.disabled = false; });

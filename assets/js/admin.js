@@ -17,6 +17,19 @@
   var configured = !!(cfg && cfg.apiKey && cfg.projectId && !/^REPLACE/.test(cfg.apiKey));
   var fb = configured ? window.ZDFB.init(cfg) : null;
   var s = { me: null, people: [], unsub: null };
+  // Sends the sign-in email from our own domain (api/staff-link.js), so staff sign-in isn't capped by Firebase's
+  // small daily email allowance. Falls back to Firebase's own email if our sender is unavailable.
+  function sendStaffLink(email, page, continueUrl) {
+    function fail(code) { var e = new Error(code); e.code = code; throw e; }
+    return fetch("/api/staff-link", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, page: page }) }).then(function (r) {
+      if (r.ok) return;
+      if (r.status === 400) fail("auth/invalid-email");
+      if (r.status === 429) fail("auth/too-many-requests");
+      return fb.staff.sendLink(email, continueUrl);
+    }, function () { return fb.staff.sendLink(email, continueUrl); });
+  }
+
   var completing = false;
 
   function msg(errEl, infoEl, kind, text) {
@@ -83,7 +96,7 @@
     if (!configured) return;
     var email = typedEmail(); if (!email) return;
     loginMessage("", ""); setBusy(true);
-    fb.staff.sendLink(email, location.origin + "/admin-dashboard/").then(function () {
+    sendStaffLink(email, "admin", location.origin + "/admin-dashboard/").then(function () {
       try { localStorage.setItem(EMAIL_KEY, email); } catch (e2) { /* ignore */ }
       loginMessage("info", "Check your email for a sign-in link, then open it on this device. It can take a minute.");
     }, function (err) { loginMessage("error", errText(err)); }).then(function () { setBusy(false); });
