@@ -30,13 +30,39 @@
   }
 
   /* Floating call button appears once the page's own call buttons scroll away */
-  var fab = $(".fab-call");
+  var fab = $(".fab-group");
   if (fab) {
     var showFab = function () {
       fab.classList.toggle("is-visible", window.scrollY > 520);
     };
     showFab();
     window.addEventListener("scroll", showFab, { passive: true });
+  }
+
+  /* Photo lightbox: links marked data-lightbox open the full photo in a pop-up with a close button */
+  var photoLinks = $$("a[data-lightbox]");
+  if (photoLinks.length && typeof HTMLDialogElement !== "undefined") {
+    var box = document.createElement("dialog");
+    box.className = "lightbox";
+    box.setAttribute("aria-label", "Photo");
+    box.innerHTML = '<button class="lightbox-close" type="button" aria-label="Close photo">&times;</button><img alt="">';
+    document.body.appendChild(box);
+    var boxImg = $("img", box);
+    var closeBox = function () { box.close(); };
+    $(".lightbox-close", box).addEventListener("click", closeBox);
+    box.addEventListener("click", function (e) { if (e.target === box) closeBox(); });
+    box.addEventListener("close", function () { document.documentElement.style.overflow = ""; });
+    photoLinks.forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        var thumb = $("img", a);
+        boxImg.src = a.getAttribute("href");
+        boxImg.alt = thumb ? thumb.alt : "";
+        document.documentElement.style.overflow = "hidden";
+        box.showModal();
+        $(".lightbox-close", box).focus();
+      });
+    });
   }
 
   /* Mobile navigation */

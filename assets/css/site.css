@@ -653,7 +653,6 @@ p {
   }
 
   .hero-art {
-    order: -1;
     width: min(100%, 320px);
   }
 
@@ -1623,7 +1622,7 @@ dialog.modal::backdrop {
 }
 
 /* Floating call (mobile) */
-.fab-call {
+.fab-group {
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -1631,33 +1630,63 @@ dialog.modal::backdrop {
   display: none;
   align-items: center;
   gap: 10px;
-  padding: 14px 20px;
-  border-radius: 999px;
-  background: var(--amber);
-  color: var(--ink);
-  font-weight: 800;
-  text-decoration: none;
-  box-shadow: 0 12px 30px -8px rgba(16, 33, 63, 0.5);
   opacity: 0;
   pointer-events: none;
   transform: translateY(12px);
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-.fab-call.is-visible {
+.fab-group.is-visible {
   opacity: 1;
   pointer-events: auto;
   transform: none;
 }
 
-.fab-call svg {
+.fab-call,
+.fab-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 12px 30px -8px rgba(16, 33, 63, 0.5);
+}
+
+.fab-call {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.fab-chat {
+  background: var(--ink);
+  color: #fff;
+}
+
+.fab-call svg,
+.fab-chat svg {
   width: 20px;
   height: 20px;
 }
 
 @media (max-width: 920px) {
-  .fab-call {
-    display: inline-flex;
+  .fab-group {
+    display: flex;
+  }
+}
+
+@media (max-width: 400px) {
+  .fab-group {
+    right: 12px;
+    gap: 8px;
+  }
+
+  .fab-call,
+  .fab-chat {
+    gap: 8px;
+    padding: 13px 16px;
   }
 }
 
@@ -2103,4 +2132,65 @@ dialog.modal::backdrop {
     grid-column: 3;
     justify-self: end;
   }
+}
+
+/* Photo lightbox (outreach gallery) */
+dialog.lightbox {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+dialog.lightbox[open] {
+  display: grid;
+  place-items: center;
+}
+
+dialog.lightbox::backdrop {
+  background: rgba(10, 20, 40, 0.88);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+dialog.lightbox img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  border-radius: 14px;
+  object-fit: contain;
+  box-shadow: var(--shadow-lg);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.lightbox-close:hover {
+  background: var(--sand);
+}
+
+.lightbox-close:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
 }
