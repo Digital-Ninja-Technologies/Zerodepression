@@ -68,6 +68,8 @@
       <div class="inbox-side">
         <div class="side-card"><h2>Waiting</h2><ul id="list-waiting" class="qlist"></ul></div>
         <div class="side-card"><h2>My chats</h2><ul id="list-mine" class="qlist"></ul></div>
+        <div class="side-card"><h2>Contact requests</h2><ul id="list-contacts" class="qlist"></ul></div>
+        <div class="side-card"><h2>My follow-ups</h2><ul id="list-followups" class="qlist"></ul></div>
         <div class="side-card guide">
           <h2>If someone may be at risk</h2>
           <ul>
@@ -82,6 +84,24 @@
 
       <div class="inbox-main">
         <div id="pane-empty" class="inbox-empty"><p>Select a chat to read it.<br>New visitors appear under <strong>Waiting</strong> with a sound alert.</p></div>
+
+        <div id="pane-contact" class="room" hidden>
+          <div class="preview-card">
+            <h2 id="ct-name" style="margin:0"></h2>
+            <p id="ct-meta" class="fine" style="margin:0 auto"></p>
+            <div id="ct-details" hidden style="text-align:left;margin:18px auto 0;max-width:460px">
+              <p style="margin:0 0 6px"><strong id="ct-contact-kind"></strong> <a id="ct-contact-link" rel="noopener"></a></p>
+              <p id="ct-note" style="margin:0;white-space:pre-wrap"></p>
+            </div>
+            <p id="ct-hint" class="lead" style="margin:16px auto 0"></p>
+            <p id="ct-error" class="form-status is-error" role="alert" hidden></p>
+            <div class="hero-actions" style="justify-content:center">
+              <button id="ct-accept" class="btn btn-primary" type="button">Accept this request</button>
+              <button id="ct-done" class="btn btn-primary" type="button" hidden>Mark as followed up</button>
+              <button id="ct-release" class="btn-quiet" type="button" hidden>Hand back</button>
+            </div>
+          </div>
+        </div>
 
         <div id="pane-preview" class="room" hidden>
           <div class="preview-card">

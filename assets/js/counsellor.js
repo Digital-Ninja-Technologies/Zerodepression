@@ -12,7 +12,10 @@
     login: $("#view-login"), inbox: $("#view-inbox"),
     form: $("#login-form"), email: $("#c-email"), loginBtn: $("#login-btn"), loginErr: $("#login-error"), loginInfo: $("#login-info"),
     name: $("#me-name"), logout: $("#logout-btn"), alerts: $("#alerts-btn"), conn: $("#banner-conn-top"),
-    waiting: $("#list-waiting"), mine: $("#list-mine"),
+    waiting: $("#list-waiting"), mine: $("#list-mine"), contacts: $("#list-contacts"), followups: $("#list-followups"),
+    pane: $("#pane-contact"), ctName: $("#ct-name"), ctMeta: $("#ct-meta"), ctDetails: $("#ct-details"), ctKind: $("#ct-contact-kind"),
+    ctLink: $("#ct-contact-link"), ctNote: $("#ct-note"), ctHint: $("#ct-hint"), ctErr: $("#ct-error"),
+    ctAccept: $("#ct-accept"), ctDone: $("#ct-done"), ctRelease: $("#ct-release"),
     empty: $("#pane-empty"), preview: $("#pane-preview"), room: $("#pane-room"),
     pvName: $("#pv-name"), pvCrisis: $("#pv-crisis"), pvText: $("#pv-text"), take: $("#take-btn"), pvErr: $("#pv-error"),
     title: $("#room-title"), sub: $("#room-sub"), crisis: $("#banner-crisis"),
@@ -24,7 +27,7 @@
   var configured = !!(cfg && cfg.apiKey && cfg.projectId && !/^REPLACE/.test(cfg.apiKey));
   var fb = configured ? window.ZDFB.init(cfg) : null;
 
-  var s = { user: null, name: null, waiting: [], mine: [], sel: null, chatUnsubs: [], unsubs: [], nodes: {}, known: null,
+  var s = { user: null, name: null, waiting: [], mine: [], contacts: [], followups: [], knownContacts: null, claiming: null, sel: null, chatUnsubs: [], unsubs: [], nodes: {}, known: null,
             knownCrisis: {}, beatTimer: null, renderTimer: null, busy: false, baseTitle: document.title, audio: null,
             lastChat: null };
 
@@ -88,7 +91,7 @@
     s.unsubs.concat(s.chatUnsubs).forEach(function (u) { try { u(); } catch (e) { /* ignore */ } });
     s.unsubs = []; s.chatUnsubs = [];
     clearInterval(s.beatTimer); clearInterval(s.renderTimer);
-    s.sel = null; s.known = null; s.knownCrisis = {}; s.waiting = []; s.mine = [];
+    s.sel = null; s.known = null; s.knownCrisis = {}; s.waiting = []; s.mine = []; s.contacts = []; s.followups = []; s.knownContacts = null;
     showPane("empty");
     document.title = s.baseTitle;
   }
@@ -104,6 +107,8 @@
     s.renderTimer = setInterval(renderLists, 15000);
     s.unsubs.push(fb.staff.watchWaiting(function (list) { s.waiting = list; el.conn.hidden = true; onQueue(); }, onQueueError));
     s.unsubs.push(fb.staff.watchMine(user.uid, function (list) { s.mine = list; renderLists(); }, onQueueError));
+    s.unsubs.push(fb.staff.watchNewContacts(function (list) { s.contacts = list; onContacts(); }, onQueueError));
+    s.unsubs.push(fb.staff.watchMyContacts(user.uid, function (list) { s.followups = list; renderContacts(); }, onQueueError));
   }
 
   function onQueueError(err) {
@@ -167,6 +172,127 @@
     document.title = (w.length ? "(" + w.length + " waiting) " : "") + s.baseTitle;
   }
 
+  /* ------------------------------------------------------------ contact requests (people who left their details) */
+  var HOW = { whatsapp: "a WhatsApp message", call: "a phone call", email: "an email" };
+  var KIND = { whatsapp: "WhatsApp:", call: "Phone:", email: "Email:" };
+
+  function onContacts() {
+    var ids = {}; s.contacts.forEach(function (c) { ids[c.id] = true; });
+    if (s.knownContacts) {
+      var fresh = s.contacts.filter(function (c) { return !s.knownContacts[c.id]; });
+      if (fresh.length) beep(1);
+    }
+    s.knownContacts = ids;
+    renderContacts();
+    // a request someone else accepted disappears from the queue
+    if (s.sel && s.sel.kind === "contact-new" && !ids[s.sel.id] && s.claiming !== s.sel.id) { s.sel = null; showPane("empty"); }
+  }
+
+  function renderContactList(listEl, items, kind) {
+    listEl.textContent = "";
+    if (!items.length) {
+      var li0 = document.createElement("li"), p = document.createElement("p");
+      p.className = "empty";
+      p.textContent = kind === "contact-new" ? "No contact requests right now." : "You have no follow-ups.";
+      li0.appendChild(p); listEl.appendChild(li0); return;
+    }
+    items.forEach(function (c) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.className = "qitem";
+      if (s.sel && s.sel.kind === kind && s.sel.id === c.id) b.setAttribute("aria-current", "true");
+      var strong = document.createElement("strong"), nm = document.createElement("span");
+      nm.textContent = c.name; strong.appendChild(nm);
+      var small = document.createElement("small");
+      small.textContent = "Wants " + (HOW[c.method] || "a reply") + " · " + ago(kind === "contact-new" ? c.createdAt : c.claimedAt);
+      b.appendChild(strong); b.appendChild(small);
+      b.addEventListener("click", function () { selectContact(kind, c); });
+      li.appendChild(b); listEl.appendChild(li);
+    });
+  }
+
+  function renderContacts() {
+    renderContactList(el.contacts, s.contacts.slice().sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); }), "contact-new");
+    renderContactList(el.followups, s.followups.slice().sort(function (a, b) { return (a.claimedAt || 0) - (b.claimedAt || 0); }), "contact-mine");
+  }
+
+  function contactLink(method, value) {
+    var digits = value.replace(/\D/g, "");
+    if (method === "email") return "mailto:" + encodeURIComponent(value);
+    if (method === "whatsapp") return "https://wa.me/" + (digits.charAt(0) === "0" ? "234" + digits.slice(1) : digits);
+    return "tel:" + (value.trim().charAt(0) === "+" ? "+" : "") + digits;
+  }
+
+  function contactErr(text) { el.ctErr.textContent = text || ""; el.ctErr.hidden = !text; }
+
+  function selectContact(kind, c) {
+    unwatchChat();
+    s.sel = { kind: kind, id: c.id, method: c.method, name: c.name };
+    renderLists(); renderContacts();
+    contactErr("");
+    el.ctName.textContent = c.name;
+    el.ctMeta.textContent = "Would like " + (HOW[c.method] || "a reply") + " · sent " + ago(c.createdAt);
+    el.ctDetails.hidden = true; el.ctLink.textContent = ""; el.ctNote.textContent = "";
+    var isNew = kind === "contact-new";
+    el.ctAccept.hidden = !isNew; el.ctAccept.disabled = false;
+    el.ctDone.hidden = isNew; el.ctRelease.hidden = isNew;
+    el.ctHint.textContent = isNew
+      ? "Accept this request to see their contact details. The first counsellor to accept follows up, and the request disappears for everyone else."
+      : "Loading their details…";
+    showPane("contact");
+    if (isNew) { el.ctAccept.focus(); return; }
+    showContactDetails(c);
+  }
+
+  function showContactDetails(c) {
+    fb.staff.contactDetails(c.id).then(function (d) {
+      if (!s.sel || s.sel.id !== c.id) return;
+      if (!d) { el.ctHint.textContent = "The details are no longer available."; return; }
+      el.ctKind.textContent = KIND[c.method] || "Contact:";
+      el.ctLink.textContent = d.contact;
+      el.ctLink.href = contactLink(c.method, d.contact);
+      if (c.method === "whatsapp") { el.ctLink.target = "_blank"; } else { el.ctLink.removeAttribute("target"); }
+      el.ctNote.textContent = d.note ? "Note: " + d.note : "";
+      el.ctDetails.hidden = false;
+      el.ctHint.textContent = "Follow up with them, then mark this as followed up. Their details are deleted when you do.";
+    }, function () { el.ctHint.textContent = ""; contactErr("We couldn't load their details. Please try again."); });
+  }
+
+  el.ctAccept.addEventListener("click", function () {
+    if (!s.sel || s.sel.kind !== "contact-new" || !s.user) return;
+    var sel = s.sel;
+    el.ctAccept.disabled = true; contactErr("");
+    s.claiming = sel.id;   // the queue snapshot drops the request the moment we claim it; don't treat that as "taken"
+    fb.staff.claimContact(sel.id, s.user.uid, s.name).then(function () {
+      s.claiming = null;
+      var c = { id: sel.id, name: sel.name, method: sel.method, createdAt: Date.now() };
+      s.sel = { kind: "contact-mine", id: sel.id, method: sel.method, name: sel.name };
+      showPane("contact"); renderContacts();
+      el.ctAccept.hidden = true; el.ctDone.hidden = false; el.ctRelease.hidden = false;
+      el.ctHint.textContent = "Loading their details…";
+      showContactDetails(c);
+    }, function (err) {
+      s.claiming = null;
+      var taken = err && err.code === "permission-denied";
+      contactErr(taken ? "Another counsellor has just accepted this request." : "We couldn't accept this request. Please try again.");
+      el.ctAccept.disabled = false;
+      if (taken) s.sel = null;
+    });
+  });
+
+  el.ctDone.addEventListener("click", function () {
+    if (!s.sel || s.sel.kind !== "contact-mine") return;
+    if (!window.confirm("Mark this request as followed up? Their contact details will be deleted.")) return;
+    var id = s.sel.id;
+    fb.staff.finishContact(id).then(function () { s.sel = null; showPane("empty"); renderContacts(); }, function () { contactErr("We couldn't update this request. Please try again."); });
+  });
+
+  el.ctRelease.addEventListener("click", function () {
+    if (!s.sel || s.sel.kind !== "contact-mine") return;
+    if (!window.confirm("Hand this request back to the queue? Another counsellor will be able to accept it.")) return;
+    fb.staff.releaseContact(s.sel.id).then(function () { s.sel = null; showPane("empty"); renderContacts(); }, function () { contactErr("We couldn't hand this back. Please try again."); });
+  });
+
+
   /* ------------------------------------------------------------ alerts */
   function beep(times) {
     try {
@@ -207,6 +333,7 @@
     el.empty.hidden = which !== "empty";
     el.preview.hidden = which !== "preview";
     el.room.hidden = which !== "room";
+    el.pane.hidden = which !== "contact";
   }
 
   function unwatchChat() { s.chatUnsubs.forEach(function (u) { try { u(); } catch (e) { /* ignore */ } }); s.chatUnsubs = []; }

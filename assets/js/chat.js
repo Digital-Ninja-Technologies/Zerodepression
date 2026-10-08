@@ -291,6 +291,54 @@
   el.again.addEventListener("click", function () { backToIntro(""); el.nick.focus(); });
   el.clear.addEventListener("click", function () { backToIntro("This conversation has been cleared from this device."); });
 
+  /* ------------------------------------------------------------ leave contact details (popup form) */
+  var ct = {
+    form: $("#contact-form"), name: $("#ct-name"), method: $("#ct-method"), contact: $("#ct-contact"),
+    label: $("#ct-contact-label"), note: $("#ct-note"), consent: $("#ct-consent"), err: $("#ct-error"),
+    submit: $("#ct-submit"), done: $("#contact-done"), doneText: $("#ct-done-text"),
+  };
+  var CONTACT_KINDS = {
+    whatsapp: { label: "WhatsApp number", type: "tel", auto: "tel", ph: "+234 801 234 5678", how: "on WhatsApp" },
+    call: { label: "Phone number", type: "tel", auto: "tel", ph: "+234 801 234 5678", how: "by phone call" },
+    email: { label: "Email address", type: "email", auto: "email", ph: "you@example.com", how: "by email" },
+  };
+  function syncContactKind() {
+    var k = CONTACT_KINDS[ct.method.value] || CONTACT_KINDS.whatsapp;
+    ct.label.textContent = k.label; ct.contact.type = k.type; ct.contact.autocomplete = k.auto; ct.contact.placeholder = k.ph;
+  }
+  function contactError(text) { ct.err.textContent = text; ct.err.hidden = !text; }
+  function contactValid(method, value) {
+    if (method === "email") return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+    var digits = value.replace(/[\s().+-]/g, "");
+    return /^\d{7,15}$/.test(digits) && /^[+\d\s().-]+$/.test(value);
+  }
+  if (ct.form) {
+    ct.method.addEventListener("change", syncContactKind);
+    ct.form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      contactError("");
+      var name = ct.name.value.trim(), method = ct.method.value, contact = ct.contact.value.trim(), note = ct.note.value.trim();
+      if (!configured) { contactError("This isn't available yet. Please call our free line on 0800 1100 2200 instead."); return; }
+      if (!name) { contactError("Please tell us what to call you."); ct.name.focus(); return; }
+      if (!contactValid(method, contact)) {
+        contactError(method === "email" ? "Please enter a valid email address." : "Please enter a valid phone number, including your country code if it isn't a Nigerian number.");
+        ct.contact.focus(); return;
+      }
+      if (!ct.consent.checked) { contactError("Please tick the box so we know it's OK to contact you."); ct.consent.focus(); return; }
+      ct.submit.disabled = true;
+      fb.visitor.submitContact({ name: name, method: method, contact: contact, note: note }).then(function () {
+        ct.doneText.textContent = "Thank you, " + name + ". Your request is now on our counsellors' dashboard. The first counsellor to accept it will follow up with you " + (CONTACT_KINDS[method] || CONTACT_KINDS.whatsapp).how + ".";
+        ct.form.hidden = true; ct.done.hidden = false;
+        ct.form.reset(); syncContactKind();
+        announce("Your contact details were sent.");
+      }, function (err) {
+        contactError(err && err.code === "permission-denied"
+          ? "We already have a request from this browser, so a counsellor will follow up on it. If it's urgent, call our free line on 0800 1100 2200."
+          : "We couldn't send your details. Please check your connection and try again, or call 0800 1100 2200.");
+      }).then(function () { ct.submit.disabled = false; });
+    });
+  }
+
   /* ------------------------------------------------------------ quick exit (button or Esc twice) */
   function quickExit() {
     unsubAll();
