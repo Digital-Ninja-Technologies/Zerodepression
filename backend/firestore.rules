@@ -7,6 +7,8 @@ rules_version = '2';
 //   chats/{uid}/messages/{id}   the conversation (sender: 'user' | 'counsellor')
 //   counsellors/{email}         invite-only allow-list, managed by admins in /counsellor-admin/ (role: 'admin')
 //   presence/{uid}              heartbeat written by signed-in counsellors so visitors can see "online now"
+//   contactRequests/{uid}       a visitor's optional "call me back" request (name + how to reach them); first counsellor to accept it wins
+//   contactRequests/{uid}/private/details   the visitor's phone/email and note, readable only by the counsellor who accepted, deleted when they finish
 //
 // Visitors sign in anonymously (no email, no account). Counsellors sign in with an email link, and are
 // let in only if their VERIFIED email has an active doc in /counsellors. Nothing can be deleted by clients;
@@ -225,6 +227,86 @@ service cloud.firestore {
             && request.resource.data.sender == 'counsellor' && shapeOk());
 
         allow update, delete: if false;
+      }
+    }
+
+    // ------------------------------------------------------------------ contact requests
+    // A visitor can leave contact details instead of (or as well as) chatting. The queue entry holds only a name and
+    // the preferred way to be reached; the phone number or email lives in a private sub-document that only the
+    // counsellor who accepted the request can read. When that counsellor marks the request done, the details are deleted.
+    match /contactRequests/{reqId} {
+      function reqPath() { return /databases/$(database)/documents/contactRequests/$(reqId); }
+      function detailsPath() { return /databases/$(database)/documents/contactRequests/$(reqId)/private/details; }
+      function ownsReq() { return isAnon() && resource.data.visitorUid == request.auth.uid; }
+      function mineReq() { return isCounsellor() && resource.data.claimedBy == request.auth.uid; }
+
+      allow read: if ownsReq()
+        || (isCounsellor() && (resource.data.status == 'new' || resource.data.claimedBy == request.auth.uid));
+
+      // One request per anonymous identity (doc id == uid), written in the same batch as its private details.
+      allow create: if isAnon() && reqId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+             'visitorUid', 'name', 'method', 'status', 'claimedBy', 'claimedByName', 'createdAt', 'claimedAt', 'doneAt', 'expireAt'])
+        && request.resource.data.keys().hasAll([
+             'visitorUid', 'name', 'method', 'status', 'claimedBy', 'claimedByName', 'createdAt', 'claimedAt', 'doneAt', 'expireAt'])
+        && request.resource.data.visitorUid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
+        && request.resource.data.method in ['call', 'whatsapp', 'email']
+        && request.resource.data.status == 'new'
+        && request.resource.data.claimedBy == null
+        && request.resource.data.claimedByName == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.claimedAt == null
+        && request.resource.data.doneAt == null
+        && boundedExpiry(request.resource.data.expireAt)
+        && existsAfter(detailsPath());
+
+      allow update:
+        // ---- counsellor: accept a new request (only one writer can win: status must still be 'new')
+        if (isCounsellor() && resource.data.status == 'new'
+          && changed().hasOnly(['status', 'claimedBy', 'claimedByName', 'claimedAt'])
+          && request.resource.data.status == 'accepted'
+          && request.resource.data.claimedBy == request.auth.uid
+          && request.resource.data.claimedByName == get(counsellorPath()).data.displayName
+          && request.resource.data.claimedAt == request.time)
+
+        // ---- counsellor: hand it back to the queue
+        || (mineReq() && resource.data.status == 'accepted'
+          && changed().hasOnly(['status', 'claimedBy', 'claimedByName', 'claimedAt'])
+          && request.resource.data.status == 'new'
+          && request.resource.data.claimedBy == null
+          && request.resource.data.claimedByName == null
+          && request.resource.data.claimedAt == null)
+
+        // ---- counsellor: mark followed up (the private details must be deleted in the same batch)
+        || (mineReq() && resource.data.status == 'accepted'
+          && changed().hasOnly(['status', 'doneAt'])
+          && request.resource.data.status == 'done'
+          && request.resource.data.doneAt == request.time
+          && !existsAfter(detailsPath()));
+
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow read: if isCounsellor() && docId == 'details'
+          && get(reqPath()).data.claimedBy == request.auth.uid
+          && get(reqPath()).data.status == 'accepted';
+
+        allow create: if isAnon() && docId == 'details' && reqId == request.auth.uid
+          && !exists(reqPath()) && existsAfter(reqPath())
+          && request.resource.data.keys().hasOnly(['contact', 'note', 'expireAt'])
+          && request.resource.data.keys().hasAll(['contact', 'note', 'expireAt'])
+          && request.resource.data.contact is string
+          && request.resource.data.contact.size() >= 3 && request.resource.data.contact.size() <= 120
+          && request.resource.data.note is string && request.resource.data.note.size() <= 500
+          && boundedExpiry(request.resource.data.expireAt);
+
+        allow update: if false;
+
+        allow delete: if isCounsellor() && docId == 'details'
+          && get(reqPath()).data.claimedBy == request.auth.uid
+          && getAfter(reqPath()).data.status == 'done';
       }
     }
 

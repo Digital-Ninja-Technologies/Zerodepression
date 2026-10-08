@@ -100,6 +100,20 @@ function init(config) {
 
     leave: () => signOut(auth),
 
+    // Leave contact details for a counsellor to follow up. The request (name + preferred method) and the private
+    // details (phone/email + note) are written together; only the counsellor who accepts can read the details.
+    async submitContact({ name, method, contact, note }) {
+      const cred = auth.currentUser && auth.currentUser.isAnonymous ? { user: auth.currentUser } : await signInAnonymously(auth);
+      const uid = cred.user.uid;
+      const b = writeBatch(db);
+      b.set(doc(db, 'contactRequests', uid), {
+        visitorUid: uid, name, method, status: 'new', claimedBy: null, claimedByName: null,
+        createdAt: serverTimestamp(), claimedAt: null, doneAt: null, expireAt: inDays(KEEP_DAYS),
+      });
+      b.set(doc(db, 'contactRequests', uid, 'private', 'details'), { contact, note, expireAt: inDays(KEEP_DAYS) });
+      await b.commit();
+    },
+
     // Number of counsellors seen in the last 2 minutes. Public read, no sign-in needed.
     async online() {
       const s = await getDocs(query(collection(db, 'presence'), where('lastSeen', '>', Timestamp.fromMillis(Date.now() - 120000))));
@@ -137,6 +151,30 @@ function init(config) {
       (s) => cb(s.docs.map(plain)), onError),
 
     watchChat, watchMessages,
+
+    // ---- contact requests (people who left their details instead of chatting)
+    watchNewContacts: (cb, onError) => onSnapshot(query(collection(db, 'contactRequests'), where('status', '==', 'new')), (s) => cb(s.docs.map(plain)), onError),
+    watchMyContacts: (uid, cb, onError) => onSnapshot(
+      query(collection(db, 'contactRequests'), where('claimedBy', '==', uid), where('status', '==', 'accepted')),
+      (s) => cb(s.docs.map(plain)), onError),
+    // Only the first counsellor to accept succeeds; everyone else is refused by the security rules.
+    claimContact: (id, uid, name) => updateDoc(doc(db, 'contactRequests', id), {
+      status: 'accepted', claimedBy: uid, claimedByName: name, claimedAt: serverTimestamp(),
+    }),
+    releaseContact: (id) => updateDoc(doc(db, 'contactRequests', id), {
+      status: 'new', claimedBy: null, claimedByName: null, claimedAt: null,
+    }),
+    // Marks the request followed up and deletes the visitor's private details in the same batch.
+    async finishContact(id) {
+      const b = writeBatch(db);
+      b.update(doc(db, 'contactRequests', id), { status: 'done', doneAt: serverTimestamp() });
+      b.delete(doc(db, 'contactRequests', id, 'private', 'details'));
+      await b.commit();
+    },
+    async contactDetails(id) {
+      const s = await getDoc(doc(db, 'contactRequests', id, 'private', 'details'));
+      return s.exists() ? { contact: s.data().contact, note: s.data().note } : null;
+    },
 
     claim: (chatId, uid, name) => updateDoc(chatRef(chatId), {
       status: 'active', counsellorUid: uid, counsellorName: name, claimedAt: serverTimestamp(), lastActivity: serverTimestamp(),

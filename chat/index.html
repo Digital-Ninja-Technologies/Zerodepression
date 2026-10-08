@@ -57,6 +57,11 @@
       <p class="fine" style="margin:14px 0 0">By starting, you understand this is volunteer peer support and not an emergency or medical service.</p>
     </form>
 
+    <div class="contact-offer">
+      <p><strong>Rather leave your details?</strong> If you'd like a counsellor to reach out to you instead, click <em>Submit contact details</em>. A form will pop up. Your details go to our counsellors' dashboard, and the first counsellor to accept your request will follow up with you.</p>
+      <button type="button" class="btn btn-ghost btn-sm" data-open-dialog="contact-dialog">Submit contact details</button>
+    </div>
+
     <div class="callout-emergency" style="margin-top:24px">
       <strong>In immediate danger, or thinking about ending your life?</strong> Please call <a href="tel:112">112</a> or go to your nearest hospital now. You can also call our free line any time on <a href="tel:+23480011002200">0800 1100 2200</a>.
     </div>
@@ -68,7 +73,8 @@
           <li>There are no accounts, no cookies and no analytics on this page. Your browser is given a random anonymous ID so the chat knows which conversation is yours. It disappears when you close this tab.</li>
           <li>We store your messages and nickname so a counsellor can reply. Volunteer counsellors can read them, and nobody else.</li>
           <li>Messages are deleted automatically about 7 days after they're sent.</li>
-          <li>The chat runs on Google Firebase. As with any website, Google can see technical details such as your internet address. We can't, and we never see your name, email, phone number or location.</li>
+          <li>The chat runs on Google Firebase. As with any website, Google can see technical details such as your internet address. We can't, and we never see your name, email, phone number or location unless you choose to submit contact details.</li>
+          <li>If you choose to submit contact details, only the counsellor who accepts your request can see your phone number or email. Your details are deleted once they have followed up, and in any case about 7 days after you send them.</li>
           <li>Anyone using this device can see this page, so use <strong>Quick exit</strong> (or press Esc twice) if you need to leave fast, and <strong>Clear this conversation</strong> when you're done.</li>
         </ul>
       </details>
@@ -84,6 +90,7 @@
       <div id="banner-wait" class="banner banner--wait" hidden>
         <span id="wait-text"></span>
         <a class="btn btn-primary btn-sm" href="tel:+23480011002200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Call 0800 1100 2200</a>
+        <button type="button" class="btn btn-ghost btn-sm" data-open-dialog="contact-dialog">Submit contact details</button>
       </div>
       <details id="wait-tips" class="wait-tips" open hidden>
         <summary>While you wait</summary>
@@ -92,6 +99,7 @@
           <li><strong>Slow your breathing.</strong> Breathe in through your nose for 4 seconds, then out slowly for 6. Repeat a few times.</li>
           <li><strong>Ground yourself.</strong> Look around and name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell and 1 you can taste.</li>
           <li><strong>Get comfortable.</strong> Sit somewhere you feel safe, drop your shoulders and have a sip of water.</li>
+          <li><strong>Rather not wait here?</strong> Use <em>Submit contact details</em> above. The first counsellor to accept your request will follow up with you.</li>
           <li><strong>Keep this page open.</strong> Your chat is private to this tab, so closing it ends the wait.</li>
         </ul>
       </details>
@@ -119,6 +127,32 @@
 </main>
 <footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">This is volunteer-led peer counselling, not an emergency service. If you are in immediate danger, call <a href="tel:112">112</a>. <a href="/">Back to the main site</a></p></div></footer>
 
+<dialog class="modal" id="contact-dialog" aria-labelledby="contact-title">
+  <div class="modal-head"><span id="contact-title">Submit contact details</span>
+    <button class="modal-close" type="button" data-close-dialog aria-label="Close">&times;</button></div>
+  <div class="modal-body">
+    <form id="contact-form" novalidate>
+      <p class="fine" style="margin-top:0">Leave your details and a counsellor will follow up with you. Your request goes to our counsellors' dashboard, and the first counsellor to accept it will contact you. Only that counsellor can see your phone number or email.</p>
+      <div class="field"><label for="ct-name">Your name <span class="fine">(a first name or nickname is fine)</span></label><input id="ct-name" type="text" maxlength="40" autocomplete="given-name" required></div>
+      <div class="field"><label for="ct-method">How should we reach you?</label>
+        <select id="ct-method"><option value="whatsapp">WhatsApp message</option><option value="call">Phone call</option><option value="email">Email</option></select></div>
+      <div class="field"><label for="ct-contact" id="ct-contact-label">WhatsApp number</label><input id="ct-contact" type="tel" maxlength="120" autocomplete="tel" placeholder="+234 801 234 5678" required></div>
+      <div class="field"><label for="ct-note">Anything you'd like us to know? <span class="fine">(optional)</span></label><textarea id="ct-note" rows="3" maxlength="500" placeholder="For example, the best time to reach you"></textarea></div>
+      <label class="check"><input id="ct-consent" type="checkbox"> <span>I agree that a ZeroDepression counsellor may contact me using these details.</span></label>
+      <p id="ct-error" class="form-status is-error" role="alert" hidden></p>
+      <div class="modal-actions">
+        <button id="ct-submit" class="btn btn-primary" type="submit">Send my details</button>
+        <button class="btn-quiet" type="button" data-close-dialog>Cancel</button>
+      </div>
+      <p class="fine" style="margin-bottom:0">Your details are deleted once a counsellor has followed up, and in any case about 7 days after you send them. This is not an emergency service. In immediate danger, call <a href="tel:112">112</a>.</p>
+    </form>
+    <div id="contact-done" hidden>
+      <h2 style="font-size:1.375rem;margin-top:0">Thank you, we've got your details</h2>
+      <p id="ct-done-text"></p>
+      <button class="btn btn-primary" type="button" data-close-dialog>Close</button>
+    </div>
+  </div>
+</dialog>
 <script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/chat.js" defer></script>
 </body>
 </html>

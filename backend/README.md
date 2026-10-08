@@ -9,7 +9,7 @@ Runs on Firebase **Authentication + Cloud Firestore** only. No Cloud Functions, 
 | --- | --- |
 | **Visitors** | Sign in *anonymously* (no email, no account). The anonymous ID lives only in that browser tab. Each visitor gets exactly one chat document, `chats/{their uid}`. |
 | **Counsellors** | Sign in with an **email link** (no password). They are let in only if their *verified* email has an active entry in the `counsellors` collection. |
-| **Security** | [`firestore.rules`](firestore.rules) is the whole security model: visitors can only touch their own chat, only approved counsellors can see the queue, only one counsellor can take a chat, nothing can be deleted by a client, and messages can't be forged. 72 automated tests cover it. |
+| **Security** | [`firestore.rules`](firestore.rules) is the whole security model: visitors can only touch their own chat, only approved counsellors can see the queue, only one counsellor can take a chat, nothing can be deleted by a client, and messages can't be forged. 89 automated tests cover it. |
 | **Live updates** | Firestore pushes new messages instantly (no polling). |
 | **Retention** | Every chat and message carries an `expireAt` date 7 days out; a Firestore TTL policy deletes them automatically. |
 | **Frontend** | `assets/js/chat.js` (visitor), `counsellor.js` (inbox), `zd-config.js` (your project's public config), and `assets/js/vendor/zd-firebase.js` (the Firebase SDK, bundled from `src/zd-firebase.js` so the site loads nothing from Google's CDN). |
@@ -32,6 +32,9 @@ Until step 1 is done the chat pages show a safe "chat isn't available yet, pleas
 5. **Turn on automatic deletion.** Firestore → *Time to live* (under *Indexes*) → create two TTL policies:
    - collection group **`chats`**, timestamp field **`expireAt`**
    - collection group **`messages`**, timestamp field **`expireAt`**
+   - collection group **`contactRequests`**, timestamp field **`expireAt`**
+   - collection group **`private`**, timestamp field **`expireAt`** (the visitors' phone numbers/emails; these are also
+     deleted by the counsellor who marks the request followed up, so the TTL policy is the safety net)
 
    Without these the site's "messages are deleted after about 7 days" promise is not true.
 6. **Create the first admin.** Firestore → *Start collection* **`counsellors`**. Add a document whose **Document ID is
@@ -45,12 +48,28 @@ Until step 1 is done the chat pages show a safe "chat isn't available yet, pleas
 7. **Try it.** Open `/counsellor/` and sign in with a counsellor email (check that inbox for the link, open it
    on the same device). In another browser open `/chat/`, start a chat, and exchange messages.
 
+## Contact requests ("Submit contact details")
+
+On `/chat/`, visitors who would rather be contacted than wait can click **Submit contact details** (on the start screen or
+while waiting). A pop-up form asks for a name, how to reach them (WhatsApp, phone call or email), the number or address, an
+optional note and consent. It is stored as `contactRequests/{uid}` (name + method only) plus a private sub-document
+`contactRequests/{uid}/private/details` (the number/email and note).
+
+- Counsellors see the queue under **Contact requests** on `/counsellor/` (with a sound alert). The first one to click
+  **Accept this request** wins (the security rules allow the write only while the status is still `new`) and can then see the
+  details and a one-click WhatsApp/call/email link. Nobody else can read the details.
+- **Mark as followed up** sets the status to `done` and deletes the details in the same batch; **Hand back** returns the request
+  to the queue. Requests and details also expire after 7 days (TTL policies above).
+- One request per anonymous browser identity, so repeat submissions from the same tab are refused.
+- **Deploy order:** publish the new `firestore.rules` (and add the two TTL policies) before the new site goes live, otherwise the
+  form will report an error until the rules are in place.
+
 ## Run the tests
 
 ```bash
 cd backend
 npm install
-npm run test:rules    # 72 security-rule tests against the Firestore emulator (needs Java 11+)
+npm run test:rules    # 89 security-rule tests against the Firestore emulator (needs Java 11+)
 npm run build:sdk     # rebuild assets/js/vendor/zd-firebase.js after editing src/zd-firebase.js
 ```
 

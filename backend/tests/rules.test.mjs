@@ -285,6 +285,142 @@ await t('any other collection is closed', async () => {
   await assertFails(setDoc(doc(staff('c-sarah', 'sarah@example.com'), 'secrets', 'a'), { x: 1 }));
 });
 
+// ============================================================ contact requests
+const cReq = (uid, over = {}) => ({
+  visitorUid: uid, name: 'Ada', method: 'whatsapp', status: 'new', claimedBy: null, claimedByName: null,
+  createdAt: serverTimestamp(), claimedAt: null, doneAt: null, expireAt: days(7), ...over,
+});
+const cDet = (over = {}) => ({ contact: '+2348012345678', note: 'Evenings are best', expireAt: days(7), ...over });
+const reqRef = (db, uid) => doc(db, 'contactRequests', uid);
+const detRef = (db, uid) => doc(db, 'contactRequests', uid, 'private', 'details');
+function submitContact(db, uid, reqOver = {}, detOver = {}) {
+  const b = writeBatch(db);
+  b.set(reqRef(db, uid), cReq(uid, reqOver));
+  b.set(detRef(db, uid), cDet(detOver));
+  return b.commit();
+}
+const sarah = () => staff('c-sarah', 'sarah@example.com');
+const tunde = () => staff('c-tunde', 'tunde@example.com');
+const acceptReq = (db, uid, cuid = 'c-sarah', name = 'Sarah') =>
+  updateDoc(reqRef(db, uid), { status: 'accepted', claimedBy: cuid, claimedByName: name, claimedAt: serverTimestamp() });
+const finishReq = (db, uid) => {
+  const b = writeBatch(db);
+  b.update(reqRef(db, uid), { status: 'done', doneAt: serverTimestamp() });
+  b.delete(detRef(db, uid));
+  return b.commit();
+};
+const CV = 'contact-v1';
+
+await reset();
+await t('a visitor can submit contact details (request + private details in one batch)', () => assertSucceeds(submitContact(anon(CV), CV)));
+await t('...but only once per identity', () => assertFails(submitContact(anon(CV), CV)));
+await t('the request cannot be written without its details', () => assertFails(setDoc(reqRef(anon('contact-v2'), 'contact-v2'), cReq('contact-v2'))));
+await t('details cannot be added later to an existing request', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'contactRequests/contact-v3'), {
+    visitorUid: 'contact-v3', name: 'Z', method: 'call', status: 'new', claimedBy: null, claimedByName: null,
+    createdAt: Timestamp.now(), claimedAt: null, doneAt: null, expireAt: days(7) }));
+  await assertFails(setDoc(detRef(anon('contact-v3'), 'contact-v3'), cDet()));
+});
+await t('a visitor cannot submit for someone else, and signed-out or staff users cannot submit', async () => {
+  await assertFails(submitContact(anon('contact-v4'), 'someone-else'));
+  await assertFails(submitContact(guest(), 'contact-v5'));
+  await assertFails(submitContact(sarah(), 'c-sarah'));
+});
+await t('request validation: name, method, status, claim fields, timestamps and extra fields are enforced', async () => {
+  const d = anon('contact-v6');
+  await assertFails(submitContact(d, 'contact-v6', { name: '' }));
+  await assertFails(submitContact(d, 'contact-v6', { name: 'x'.repeat(41) }));
+  await assertFails(submitContact(d, 'contact-v6', { method: 'carrier-pigeon' }));
+  await assertFails(submitContact(d, 'contact-v6', { status: 'accepted' }));
+  await assertFails(submitContact(d, 'contact-v6', { claimedBy: 'c-sarah' }));
+  await assertFails(submitContact(d, 'contact-v6', { visitorUid: 'other' }));
+  await assertFails(submitContact(d, 'contact-v6', { createdAt: days(-1) }));
+  await assertFails(submitContact(d, 'contact-v6', { expireAt: days(30) }));
+  await assertFails(submitContact(d, 'contact-v6', { extra: 1 }));
+});
+await t('details validation: contact length, note length, extra fields and expiry are enforced', async () => {
+  const d = anon('contact-v7');
+  await assertFails(submitContact(d, 'contact-v7', {}, { contact: 'ab' }));
+  await assertFails(submitContact(d, 'contact-v7', {}, { contact: 'x'.repeat(121) }));
+  await assertFails(submitContact(d, 'contact-v7', {}, { note: 'x'.repeat(501) }));
+  await assertFails(submitContact(d, 'contact-v7', {}, { expireAt: days(30) }));
+  await assertFails(submitContact(d, 'contact-v7', {}, { extra: 1 }));
+  await assertSucceeds(submitContact(d, 'contact-v7', {}, { note: '' }));
+});
+await t('the visitor can read their own request but not the private details, and cannot edit it', async () => {
+  const d = anon(CV);
+  await assertSucceeds(getDoc(reqRef(d, CV)));
+  await assertFails(getDoc(detRef(d, CV)));
+  await assertFails(updateDoc(reqRef(d, CV), { name: 'Changed' }));
+  await assertFails(acceptReq(d, CV, CV, 'Ada'));
+  await assertFails(getDoc(reqRef(anon('someone'), CV)));
+});
+await t('counsellors can list new requests but cannot see the details before accepting', async () => {
+  const d = sarah();
+  const q = await assertSucceeds(getDocs(query(collection(d, 'contactRequests'), where('status', '==', 'new'))));
+  if (q.size < 1) throw new Error('expected at least one request');
+  await assertFails(getDoc(detRef(d, CV)));
+  await assertFails(getDocs(collection(d, 'contactRequests')));
+});
+await t('visitors, signed-out users and inactive counsellors cannot list the queue', async () => {
+  await assertFails(getDocs(query(collection(anon('nosy'), 'contactRequests'), where('status', '==', 'new'))));
+  await assertFails(getDocs(query(collection(guest(), 'contactRequests'), where('status', '==', 'new'))));
+  await assertFails(getDocs(query(collection(staff('c-gone', 'gone@example.com'), 'contactRequests'), where('status', '==', 'new'))));
+});
+
+await reset();
+await submitContact(anon(CV), CV);
+await t('the first counsellor to accept wins; the second is refused', async () => {
+  await assertSucceeds(acceptReq(sarah(), CV));
+  await assertFails(acceptReq(tunde(), CV, 'c-tunde', 'Tunde'));
+});
+await t('only the counsellor who accepted can read the details or the request', async () => {
+  const d = await assertSucceeds(getDoc(detRef(sarah(), CV)));
+  if (d.data().contact !== '+2348012345678') throw new Error('wrong details');
+  await assertFails(getDoc(detRef(tunde(), CV)));
+  await assertFails(getDoc(reqRef(tunde(), CV)));
+  await assertSucceeds(getDoc(reqRef(sarah(), CV)));
+  const mine = await assertSucceeds(getDocs(query(collection(sarah(), 'contactRequests'), where('claimedBy', '==', 'c-sarah'), where('status', '==', 'accepted'))));
+  if (mine.size !== 1) throw new Error('expected 1 follow-up');
+});
+await t('the visitor still cannot read their details back once accepted', () => assertFails(getDoc(detRef(anon(CV), CV))));
+
+await reset();
+await submitContact(anon('contact-v8'), 'contact-v8');
+await t('accept validation: name must match, claimedBy must be the caller, nothing else may change', async () => {
+  const d = sarah();
+  await assertFails(acceptReq(d, 'contact-v8', 'c-sarah', 'Someone Else'));
+  await assertFails(acceptReq(d, 'contact-v8', 'c-tunde', 'Sarah'));
+  await assertFails(updateDoc(reqRef(d, 'contact-v8'), { status: 'accepted', claimedBy: 'c-sarah', claimedByName: 'Sarah', claimedAt: serverTimestamp(), name: 'Renamed' }));
+  await assertFails(updateDoc(reqRef(d, 'contact-v8'), { status: 'done', doneAt: serverTimestamp() }));
+  await assertSucceeds(acceptReq(d, 'contact-v8'));
+});
+await t('only the counsellor who accepted can hand the request back; then anyone can accept it', async () => {
+  const back = (db) => updateDoc(reqRef(db, 'contact-v8'), { status: 'new', claimedBy: null, claimedByName: null, claimedAt: null });
+  await assertFails(back(tunde()));
+  await assertSucceeds(back(sarah()));
+  await assertFails(getDoc(detRef(sarah(), 'contact-v8')));
+  await assertSucceeds(acceptReq(tunde(), 'contact-v8', 'c-tunde', 'Tunde'));
+  await assertSucceeds(getDoc(detRef(tunde(), 'contact-v8')));
+});
+await t('marking done must delete the private details in the same batch', async () => {
+  await assertFails(updateDoc(reqRef(tunde(), 'contact-v8'), { status: 'done', doneAt: serverTimestamp() }));
+  await assertFails(finishReq(sarah(), 'contact-v8'));
+  await assertSucceeds(finishReq(tunde(), 'contact-v8'));
+  await assertFails(getDoc(detRef(tunde(), 'contact-v8')));
+});
+await t('details cannot be deleted on their own, and nobody can delete a request', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'contactRequests/contact-v10'), { visitorUid: 'contact-v10', name: 'Z', method: 'call', status: 'accepted', claimedBy: 'c-sarah', claimedByName: 'Sarah', createdAt: Timestamp.now(), claimedAt: Timestamp.now(), doneAt: null, expireAt: days(7) });
+    await setDoc(doc(ctx.firestore(), 'contactRequests/contact-v10/private/details'), cDet());
+  });
+  await assertFails(deleteDoc(detRef(sarah(), 'contact-v10')));
+  await assertFails(deleteDoc(reqRef(sarah(), 'contact-v10')));
+  await assertFails(deleteDoc(reqRef(admin(), 'contact-v10')));
+  await assertFails(deleteDoc(reqRef(anon('contact-v10'), 'contact-v10')));
+});
+
+
 await env.cleanup();
 const pass = results.filter(Boolean).length;
 console.log(`\n${pass}/${results.length} passed`);
