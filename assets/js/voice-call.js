@@ -72,6 +72,37 @@
       return b;
     }
 
+    /* Visitors must agree before any call can start or be answered (counsellors are bound by their role). */
+    function consent(incoming) {
+      if (role !== "user") return Promise.resolve(true);
+      return new Promise(function (resolve) {
+        var d = el("dialog", "modal modal--confirm");
+        var body = el("div", "modal-body");
+        var h = el("h2", "", incoming ? otherName() + " would like to talk by voice" : "Request a voice call?");
+        var p1 = el("p", "", "A voice call is optional and only happens if you agree. Please check you're happy with this first:");
+        var ul = el("ul", "exit-list");
+        ["Your browser connects directly to the counsellor's, so for the length of the call they can technically see your internet address (your network and rough area, not your name).",
+         "The call is not recorded.",
+         "Your browser will ask to use your microphone. You can end the call at any time and carry on by text."
+        ].forEach(function (t) { ul.appendChild(el("li", "", t)); });
+        var acts = el("div", "modal-actions");
+        var no = el("button", "btn btn-quiet", incoming ? "No, keep to text" : "Cancel"); no.type = "button";
+        var yes = el("button", "btn btn-primary", incoming ? "I consent, accept call" : "I consent, send request"); yes.type = "button";
+        acts.appendChild(no); acts.appendChild(yes);
+        body.appendChild(h); body.appendChild(p1); body.appendChild(ul); body.appendChild(acts);
+        d.appendChild(body);
+        document.body.appendChild(d);
+        var done = false;
+        function finish(ok) { if (done) return; done = true; try { d.close(); } catch (e) { /* ignore */ } d.remove(); resolve(ok); }
+        yes.addEventListener("click", function () { finish(true); });
+        no.addEventListener("click", function () { finish(false); });
+        d.addEventListener("cancel", function () { finish(false); });
+        d.addEventListener("close", function () { finish(false); });
+        if (typeof d.showModal === "function") { d.showModal(); yes.focus(); }
+        else { finish(window.confirm("Voice calls connect your browser directly to the counsellor's, so they can technically see your internet address. Calls are not recorded. Do you consent?")); }
+      });
+    }
+
     function showBar(text, buttons, tone) {
       barText.textContent = text;
       barBtns.textContent = "";
@@ -194,6 +225,13 @@
     callBtn.addEventListener("click", function () {
       if (st.busy || st.pc || !st.chatId || !st.available) return;
       st.busy = true; callBtn.hidden = true;
+      consent(false).then(function (ok) {
+        if (!ok) { st.busy = false; renderButton(); return; }
+        startOutgoing();
+      });
+    });
+
+    function startOutgoing() {
       showBar("Sending your call request…", [], "");
       var chatId = st.chatId, callId = fb.calls.newId(chatId);
       navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false }).then(function (stream) {
@@ -212,7 +250,7 @@
         cleanup();
         say(err && err.name ? micError(err) : "We couldn't start the call. Please try again.");
       });
-    });
+    }
 
     /* ---------------------------------------------------------- incoming + state changes */
     function onCall(c) {
@@ -245,7 +283,14 @@
           if (document.hidden && "Notification" in window && Notification.permission === "granted") {
             try { new Notification(otherName() + " wants to start a voice call", { body: "Open the chat to accept or decline.", tag: "zd-call" }); } catch (e) { /* ignore */ }
           }
-          var accept = button("Accept call", "btn-primary", function () { answer(c); });
+          var accept = button("Accept call", "btn-primary", function () {
+            ring(false); st.busy = true;
+            consent(true).then(function (ok) {
+              st.busy = false;
+              if (ok) answer(c);
+              else { st.handled[c.id] = true; hideBar(); fb.calls.end(st.chatId, c.id, role, "declined").catch(function () {}); renderButton(); }
+            });
+          });
           var decline = button("Decline", "btn-ghost", function () {
             st.handled[c.id] = true; ring(false); hideBar();
             fb.calls.end(st.chatId, c.id, role, "declined").catch(function () {});
