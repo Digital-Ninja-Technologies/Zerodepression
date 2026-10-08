@@ -803,3 +803,23 @@
 .btn-danger-solid:hover { background: #a91f1f; border-color: #a91f1f; }
 @keyframes zd-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.8); } }
 @media (prefers-reduced-motion: reduce) { .call-bar[data-tone="ringing"] .call-bar-text::before { animation: none; } }
+
+/* Quick exit confirmation */
+.exit-list {
+  margin: 0 0 4px;
+  padding-left: 20px;
+  color: var(--ink-soft);
+}
+
+.exit-list li {
+  margin-bottom: 6px;
+}
+
+.btn-danger-solid {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger-solid:hover {
+  background: #8f1d17;
+}

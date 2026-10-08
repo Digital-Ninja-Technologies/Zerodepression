@@ -154,6 +154,22 @@
     </div>
   </div>
 </dialog>
+<dialog class="modal modal--confirm" id="exit-dialog" aria-labelledby="exit-title" aria-describedby="exit-text">
+  <div class="modal-head"><span id="exit-title">Leave this page now?</span>
+    <button class="modal-close" type="button" data-close-dialog aria-label="Stay on this page">&times;</button></div>
+  <div class="modal-body">
+    <p id="exit-text" style="margin-top:0">Quick exit takes you straight to the ZeroDepression homepage and ends your anonymous session on this device.</p>
+    <ul class="exit-list">
+      <li>Your conversation is cleared from this browser.</li>
+      <li>If a counsellor is chatting with you, they will see that you've left.</li>
+      <li>You can start a new chat any time.</li>
+    </ul>
+    <div class="modal-actions">
+      <button id="exit-confirm" class="btn btn-danger-solid" type="button">Yes, exit now</button>
+      <button class="btn-quiet" type="button" data-close-dialog>Stay here</button>
+    </div>
+  </div>
+</dialog>
 <script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/voice-call.js" defer></script><script src="/assets/js/chat.js" defer></script>
 </body>
 </html>

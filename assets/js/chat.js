@@ -368,7 +368,18 @@
     if (fb) { fb.visitor.leave().catch(function () {}); }
     window.location.replace("/");
   }
-  el.quick.addEventListener("click", quickExit);
+  // The button asks first (it is easy to hit by accident); pressing Esc twice is a deliberate shortcut and leaves at once.
+  var exitDialog = $("#exit-dialog");
+  el.quick.addEventListener("click", function () {
+    if (exitDialog && typeof exitDialog.showModal === "function") {
+      exitDialog.showModal();
+      var yes = $("#exit-confirm");
+      if (yes) yes.focus();
+    } else if (window.confirm("Leave this page now? Your conversation will be cleared from this device.")) {
+      quickExit();
+    }
+  });
+  if ($("#exit-confirm")) $("#exit-confirm").addEventListener("click", quickExit);
   var lastEsc = 0;
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
