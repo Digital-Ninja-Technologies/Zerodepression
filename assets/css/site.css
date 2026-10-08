@@ -1450,6 +1450,12 @@ html {
   opacity: 1;
 }
 
+/* the Arogi logo has a white background and is squarer, so it gets more height and blends into the page */
+.logo-row img.logo-arogi {
+  height: 72px;
+  mix-blend-mode: multiply;
+}
+
 .facts {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
