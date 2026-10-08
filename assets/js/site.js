@@ -88,7 +88,7 @@
         toggle.focus();
       }
     });
-    window.matchMedia("(min-width: 921px)").addEventListener("change", function (e) {
+    window.matchMedia("(min-width: 1081px)").addEventListener("change", function (e) {
       if (e.matches) setNav(false);
     });
   }
