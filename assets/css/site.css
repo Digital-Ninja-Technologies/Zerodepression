@@ -523,7 +523,7 @@ html {
     border-radius: 16px;
     font-size: 1.25rem;
     background: var(--white);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
   }
 
   .nav-links .nav-links__call {
