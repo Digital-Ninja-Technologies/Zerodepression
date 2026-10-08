@@ -2249,3 +2249,55 @@ dialog.lightbox img {
 .card > .has-badge {
   margin-top: 14px;
 }
+
+/* Our partners */
+.partners {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+}
+
+.partner-card {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  align-items: center;
+  gap: clamp(20px, 3vw, 36px);
+  width: min(100%, 860px);
+}
+
+.partner-logo {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+}
+
+.partner-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.partner-body h3 {
+  margin: 4px 0 10px;
+}
+
+.partner-body p {
+  margin: 0 0 12px;
+}
+
+.partner-body p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .partner-card {
+    grid-template-columns: 1fr;
+  }
+
+  .partner-logo {
+    max-width: 260px;
+  }
+}
