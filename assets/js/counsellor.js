@@ -477,6 +477,14 @@
         loginMessage("error", "This email isn't on the counsellor list. Ask an admin to add it.");
         return;
       }
+      if (typeof profile.displayName !== "string" || !profile.displayName.trim()) {
+        // Taking a chat or a contact request records the counsellor's display name, and the security rules
+        // refuse it when the profile has none, so stop here with a clear fix instead of failing later.
+        fb.staff.signOut().catch(function () {});
+        showView("login");
+        loginMessage("error", "Your counsellor profile has no display name, so you can't take chats yet. An admin can set it in the admin dashboard (or in Firestore: counsellors > " + String(user.email || "").toLowerCase() + " > add displayName as a string). Then sign in again.");
+        return;
+      }
       loginMessage("", "");
       enter(user, profile);
     });
