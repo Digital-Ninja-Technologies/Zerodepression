@@ -166,6 +166,7 @@ function init(config) {
     isLink: (href) => isSignInWithEmailLink(auth, href),
     completeLink: (email, href) => signInWithEmailLink(auth, email, href),
     signOut: () => signOut(auth),
+    idToken: () => (auth.currentUser ? auth.currentUser.getIdToken() : Promise.reject(new Error('signed out'))),
 
     // Returns {displayName} for an approved counsellor, or null.
     async profile(email) {

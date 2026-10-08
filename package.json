@@ -3,6 +3,7 @@
   "private": true,
   "description": "Static site plus one Vercel function (api/notify.js) that sends counsellor alerts",
   "dependencies": {
+    "exceljs": "^4.4.0",
     "firebase-admin": "^13.6.0",
     "web-push": "^3.6.7"
   }

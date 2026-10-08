@@ -1,10 +1,7 @@
 (function () {
   "use strict";
 
-  var NEWSLETTER_URLS = [
-    "https://api.zerodepression.org/v1/ge/newsletter",
-    "https://api1.zerodepression.org/v1/ge/newsletter",
-  ];
+  var NEWSLETTER_URL = "/api/subscribe";
   var CONTACT_URL = "/api/contact";
 
   function $(sel, root) {
@@ -204,14 +201,6 @@
     });
   }
 
-  function firstSuccess(urls, payload) {
-    return urls.reduce(function (chain, url) {
-      return chain.catch(function () {
-        return postJSON(url, payload);
-      });
-    }, Promise.reject());
-  }
-
   function wireForm(form, submit, successMessage) {
     var button = $("button[type=submit]", form);
     form.addEventListener("submit", function (e) {
@@ -249,9 +238,11 @@
     wireForm(
       form,
       function () {
-        return firstSuccess(NEWSLETTER_URLS, {
-          first_name: form.elements.name.value.trim(),
+        return postJSON(NEWSLETTER_URL, {
+          name: form.elements.name.value.trim(),
           email: form.elements.email.value.trim(),
+          website: form.elements.website ? form.elements.website.value : "",
+          page: location.pathname,
         });
       },
       "You're subscribed. Thank you for joining us."

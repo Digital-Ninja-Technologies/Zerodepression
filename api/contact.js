@@ -2,10 +2,10 @@
 // counsellor alerts use). Replying to the email replies to the visitor.
 //
 // Spam guards: a hidden "website" field bots fill in, length limits, and at most 5 messages per hour from one
-// network address (stored only as a hash, in Firestore contactSends/{hash}).
-const crypto = require('crypto');
+// network address (stored only as a hash, in Firestore formLimits/).
 const { app } = require('./_firebase');
-const { getFirestore, Timestamp } = require('firebase-admin/firestore');
+const { getFirestore } = require('firebase-admin/firestore');
+const underLimit = require('./_limit');
 
 const TO = process.env.CONTACT_TO || 'officialzerodepression@gmail.com';
 const PER_HOUR = 5;
@@ -15,28 +15,6 @@ function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function clean(v, max) { return String(v == null ? '' : v).replace(/\r\n?/g, '\n').trim().slice(0, max); }
-
-async function underLimit(req) {
-  let db;
-  try { app(); db = getFirestore(); } catch (e) { return true; }   // no Firestore: don't block real messages
-  const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
-  const key = crypto.createHash('sha256').update('zd-contact:' + ip).digest('hex').slice(0, 40);
-  const ref = db.doc('contactSends/' + key);
-  const now = Date.now();
-  try {
-    return await db.runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-      const recent = ((snap.exists && snap.data().at) || []).map((t) => (t.toMillis ? t.toMillis() : 0)).filter((t) => now - t < 3600000);
-      if (recent.length >= PER_HOUR) return false;
-      recent.push(now);
-      tx.set(ref, { at: recent.map((t) => Timestamp.fromMillis(t)), expireAt: Timestamp.fromMillis(now + 86400000) });
-      return true;
-    });
-  } catch (e) {
-    console.error('contact: rate check failed', e.message);
-    return true;
-  }
-}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -56,7 +34,9 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'invalid' });
   }
   if (!process.env.RESEND_API_KEY || !process.env.ALERT_FROM) return res.status(503).json({ error: 'not configured' });
-  if (!(await underLimit(req))) return res.status(429).json({ error: 'too-many-requests' });
+  let db = null;
+  try { app(); db = getFirestore(); } catch (e) { /* no Firestore: skip the limit rather than lose real messages */ }
+  if (db && !(await underLimit(db, req, 'contact', PER_HOUR))) return res.status(429).json({ error: 'too-many-requests' });
 
   const from = process.env.ALERT_FROM.replace(/^[^<]*</, 'ZeroDepression website <');
   const html = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#1b2340">' +

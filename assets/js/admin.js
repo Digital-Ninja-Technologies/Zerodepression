@@ -129,11 +129,41 @@
     s.me = { email: user.email, name: profile.displayName };
     el.name.textContent = profile.displayName;
     showView("admin");
+    loadSubCount();
     s.unsub = fb.admin.watchCounsellors(function (list) { s.people = list; el.conn.hidden = true; render(); }, function (err) {
       if (err && err.code === "permission-denied") { signOutNow("This account isn't allowed to manage counsellors."); return; }
       el.conn.hidden = false;
     });
   }
+
+  /* ------------------------------------------------------------ newsletter subscribers (Excel download) */
+  var subBtn = $("#sub-download"), subErr = $("#sub-error"), subCount = $("#sub-count");
+  function subscribersApi(query) {
+    return fb.staff.idToken().then(function (t) {
+      return fetch("/api/subscribers" + (query || ""), { headers: { Authorization: "Bearer " + t } });
+    }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r; });
+  }
+  function loadSubCount() {
+    subscribersApi("?count=1").then(function (r) { return r.json(); }).then(function (d) {
+      subCount.textContent = "(" + d.count + ")";
+    }, function () { subCount.textContent = ""; });
+  }
+  if (subBtn) subBtn.addEventListener("click", function () {
+    var label = subBtn.textContent;
+    subBtn.disabled = true; subBtn.textContent = "Preparing…"; subErr.hidden = true;
+    subscribersApi("").then(function (r) {
+      var name = (/filename="([^"]+)"/.exec(r.headers.get("Content-Disposition") || "") || [])[1] || "zerodepression-subscribers.xlsx";
+      return r.blob().then(function (b) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(b); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+      });
+    }).then(loadSubCount, function () {
+      subErr.textContent = "We couldn't build the file just now. Please try again in a moment.";
+      subErr.hidden = false;
+    }).then(function () { subBtn.disabled = false; subBtn.textContent = label; });
+  });
 
   function act(label, fn) {
     return function (btn) {
