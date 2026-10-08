@@ -2369,3 +2369,12 @@ dialog.lightbox img {
   flex: none;
   stroke: none;
 }
+
+/* Spam trap on forms: hidden from people and screen readers, bots fill it in */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

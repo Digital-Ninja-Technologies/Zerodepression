@@ -5,7 +5,7 @@
     "https://api.zerodepression.org/v1/ge/newsletter",
     "https://api1.zerodepression.org/v1/ge/newsletter",
   ];
-  var CONTACT_URL = "https://api1.zerodepression.org/api/v1/ge/contact-us";
+  var CONTACT_URL = "/api/contact";
 
   function $(sel, root) {
     return (root || document).querySelector(sel);
@@ -267,7 +267,9 @@
         return postJSON(CONTACT_URL, {
           name: form.elements.name.value.trim(),
           email: form.elements.email.value.trim(),
-          contribution: topic ? "[" + topic + "] " + message : message,
+          topic: topic,
+          message: message,
+          website: form.elements.website ? form.elements.website.value : "",
         });
       },
       "Message sent. Thank you, we'll be in touch."
