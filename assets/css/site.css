@@ -461,7 +461,7 @@ p {
   display: grid;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1080px) {
   .nav-toggle {
     display: inline-grid;
   }
@@ -510,7 +510,7 @@ p {
   }
 }
 
-@media (min-width: 921px) {
+@media (min-width: 1081px) {
   .nav-call-item {
     display: none;
   }
@@ -1671,7 +1671,7 @@ dialog.modal::backdrop {
   height: 20px;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1080px) {
   .fab-group {
     display: flex;
   }
@@ -2064,7 +2064,7 @@ dialog.modal::backdrop {
 }
 
 /* Six nav items plus the call button need less padding just above the mobile breakpoint. */
-@media (min-width: 921px) and (max-width: 1120px) {
+@media (min-width: 1081px) and (max-width: 1200px) {
   .nav {
     gap: 12px;
   }
@@ -2099,24 +2099,24 @@ dialog.modal::backdrop {
   color: #fff;
 }
 
-@media (min-width: 921px) {
+@media (min-width: 1081px) {
   .nav-chat {
     display: none;
   }
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1080px) {
   .nav-links .nav-chat__btn {
     padding: 16px 18px;
     text-align: center;
   }
 }
 
-/* Desktop header: logo left, menu truly centred, buttons together on the right */
-@media (min-width: 921px) {
+/* Desktop header: logo left, menu centred between the logo and the buttons, buttons together on the right */
+@media (min-width: 1081px) {
   .nav {
     display: grid;
-    grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+    grid-template-columns: auto 1fr auto;
   }
 
   .nav > .logo {
@@ -2126,6 +2126,7 @@ dialog.modal::backdrop {
 
   .nav > nav {
     grid-column: 2;
+    justify-self: center;
   }
 
   .nav > .nav-cta {
@@ -2195,13 +2196,40 @@ dialog.lightbox img {
   outline-offset: 2px;
 }
 
-/* Footer: "Chat with a counsellor" button with a FREE badge overlaid on its top edge */
+/* "FREE" badge overlaid on the top edge of every chat button */
+.has-badge {
+  position: relative;
+}
+
+.free-badge {
+  position: absolute;
+  top: -14px;
+  right: 12px;
+  padding: 3px 9px;
+  border: 2px solid var(--badge-ring, var(--cream));
+  border-radius: 999px;
+  background: var(--sage);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* the ring takes the colour of whatever the button sits on */
+.site-footer .free-badge,
+.cta-band .free-badge {
+  --badge-ring: var(--ink);
+}
+
 .site-footer .footer-chat-item {
   padding-top: 12px;
 }
 
 .site-footer a.footer-chat {
-  position: relative;
   display: inline-flex;
   color: var(--ink);
   text-decoration: none;
@@ -2213,20 +2241,11 @@ dialog.lightbox img {
   text-decoration: none;
 }
 
-.free-badge {
-  position: absolute;
-  top: -14px;
-  right: 12px;
-  padding: 3px 9px;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  background: var(--sage);
-  color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
+/* room above a row of buttons so the badge doesn't touch whatever is above it */
+.hero-actions:has(.has-badge) {
+  padding-top: 12px;
+}
+
+.card > .has-badge {
+  margin-top: 14px;
 }
