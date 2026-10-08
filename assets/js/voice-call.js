@@ -81,8 +81,7 @@
         var h = el("h2", "", incoming ? otherName() + " would like to talk by voice" : "Request a voice call?");
         var p1 = el("p", "", "A voice call is optional and only happens if you agree. Please check you're happy with this first:");
         var ul = el("ul", "exit-list");
-        ["Your browser connects directly to the counsellor's, so for the length of the call they can technically see your internet address (your network and rough area, not your name).",
-         "The call is not recorded.",
+        ["The call is not recorded.",
          "Your browser will ask to use your microphone. You can end the call at any time and carry on by text."
         ].forEach(function (t) { ul.appendChild(el("li", "", t)); });
         var acts = el("div", "modal-actions");
@@ -99,7 +98,7 @@
         d.addEventListener("cancel", function () { finish(false); });
         d.addEventListener("close", function () { finish(false); });
         if (typeof d.showModal === "function") { d.showModal(); yes.focus(); }
-        else { finish(window.confirm("Voice calls connect your browser directly to the counsellor's, so they can technically see your internet address. Calls are not recorded. Do you consent?")); }
+        else { finish(window.confirm("Voice calls are optional and are not recorded. Do you consent to a voice call?")); }
       });
     }
 
