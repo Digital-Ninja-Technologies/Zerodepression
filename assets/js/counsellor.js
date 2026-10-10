@@ -38,6 +38,7 @@
     el.login.hidden = v !== "login";
     el.inbox.hidden = v !== "inbox";
     if (v === "login") document.title = s.baseTitle;
+    if (typeof renderPill === "function") renderPill(v === "inbox" && isOnline());
   }
   function loginMessage(kind, text) {
     el.loginErr.hidden = kind !== "error"; el.loginInfo.hidden = kind !== "info";
@@ -351,9 +352,17 @@
   function isStandalone() { return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
   function pushSupported() { return !!(PUSH_KEY && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window); }
 
+  var statusPill = $("#status-pill");
+  function renderPill(on) {
+    if (!statusPill) return;
+    if (!s.user || el.inbox.hidden) { statusPill.textContent = "Counsellor inbox"; delete statusPill.dataset.state; return; }
+    statusPill.dataset.state = on ? "online" : "offline";
+    statusPill.textContent = on ? "You're online" : "You're offline";
+  }
   function renderOnline() {
-    if (!el.onlineBtn) return;
     var on = isOnline();
+    renderPill(on);
+    if (!el.onlineBtn) return;
     el.onlineBtn.setAttribute("aria-checked", on ? "true" : "false");
     el.onlineStatus.dataset.state = on ? "on" : "off";
     var how = s.pushState === "on" ? "push on this device and email"

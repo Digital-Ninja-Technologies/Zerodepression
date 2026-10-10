@@ -140,17 +140,11 @@ function init(config) {
       return uid;
     },
 
-    // Number of counsellors online: inbox open in the last 2 minutes, or Online toggle switched on. Public read.
+    // Number of counsellors online: only those who switched the Online toggle on (and whose 8 hours haven't run
+    // out). Having the inbox open without the toggle doesn't count. Public read.
     async online() {
-      const now = Date.now();
-      const [recent, toggled] = await Promise.all([
-        getDocs(query(collection(db, 'presence'), where('lastSeen', '>', Timestamp.fromMillis(now - 120000)))),
-        getDocs(query(collection(db, 'presence'), where('onlineUntil', '>', Timestamp.fromMillis(now)))),
-      ]);
-      const ids = new Set();
-      recent.forEach((d) => ids.add(d.id));
-      toggled.forEach((d) => ids.add(d.id));
-      return ids.size;
+      const snap = await getDocs(query(collection(db, 'presence'), where('onlineUntil', '>', Timestamp.fromMillis(Date.now()))));
+      return snap.size;
     },
   };
 
