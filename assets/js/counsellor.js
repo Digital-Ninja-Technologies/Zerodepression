@@ -4,7 +4,6 @@
   var EMAIL_KEY = "zd_staff_email";
   var BEAT = 45000;            // presence heartbeat
   var STALE_WAITING = 3 * 60000; // hide waiting chats whose visitor has gone quiet
-  var MAX_ACTIVE = 3;
   var ONLINE_MS = 8 * 3600000;  // Online toggle switches itself off after 8 hours
   var DEVICE_KEY = "zd_push_device";
 
@@ -541,7 +540,6 @@
 
   el.take.addEventListener("click", function () {
     if (!s.sel || !s.user) return;
-    if (s.mine.length >= MAX_ACTIVE) { el.pvErr.textContent = "You already have " + MAX_ACTIVE + " active chats. Finish or hand one back before taking another."; el.pvErr.hidden = false; return; }
     var id = s.sel.id, nick = el.pvName.textContent, crisis = !el.pvCrisis.hidden;
     el.take.disabled = true; el.pvErr.hidden = true;
     fb.staff.claim(id, s.user.uid, s.name).then(function () {
