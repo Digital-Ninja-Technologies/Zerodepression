@@ -1,4 +1,5 @@
-// Admin-only: the newsletter list. GET ?count=1 returns {count}; plain GET returns an Excel (.xlsx) file.
+// Admin-only: the newsletter list. GET ?count=1 returns {count}; ?format=json returns {subscribers: [...]} for the
+// dashboard list; plain GET returns an Excel (.xlsx) file.
 // The caller sends their Firebase ID token (Authorization: Bearer ...) and must be an active admin.
 const { app } = require('./_firebase');
 const { getFirestore } = require('firebase-admin/firestore');
@@ -31,6 +32,13 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ count: c.data().count });
     }
     const snap = await db.collection('newsletter').orderBy('subscribedAt', 'desc').get();
+    if (req.query && req.query.format === 'json') {
+      const ms = (ts) => (ts && ts.toMillis ? ts.toMillis() : null);
+      return res.status(200).json({ subscribers: snap.docs.map((d) => {
+        const x = d.data();
+        return { firstName: x.firstName || '', email: x.email || d.id, subscribedAt: ms(x.subscribedAt), page: x.page || '' };
+      }) });
+    }
     const wb = new ExcelJS.Workbook();
     wb.creator = 'ZeroDepression'; wb.created = new Date();
     const ws = wb.addWorksheet('Subscribers', { views: [{ state: 'frozen', ySplit: 1 }] });

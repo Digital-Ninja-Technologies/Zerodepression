@@ -143,11 +143,40 @@
       return fetch("/api/subscribers" + (query || ""), { headers: { Authorization: "Bearer " + t } });
     }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r; });
   }
-  function loadSubCount() {
-    subscribersApi("?count=1").then(function (r) { return r.json(); }).then(function (d) {
-      subCount.textContent = "(" + d.count + ")";
-    }, function () { subCount.textContent = ""; });
+  var subRows = $("#sub-rows"), subTable = $("#sub-table"), subEmpty = $("#sub-empty"), subSearch = $("#sub-search"), subList = [];
+  function subDate(ms) {
+    if (!ms) return "";
+    var d = new Date(ms);
+    return d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }) + ", " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   }
+  function renderSubs() {
+    var q = (subSearch.value || "").trim().toLowerCase();
+    var list = !q ? subList : subList.filter(function (x) { return (x.firstName + " " + x.email).toLowerCase().indexOf(q) !== -1; });
+    subRows.textContent = "";
+    list.forEach(function (x) {
+      var tr = document.createElement("tr");
+      var n = document.createElement("td"); n.textContent = x.firstName || "—"; n.setAttribute("data-label", "Name");
+      var e = document.createElement("td"); e.setAttribute("data-label", "Email");
+      var a = document.createElement("a"); a.href = "mailto:" + x.email; a.textContent = x.email; e.appendChild(a);
+      var t = document.createElement("td"); t.textContent = subDate(x.subscribedAt); t.setAttribute("data-label", "Subscribed");
+      tr.appendChild(n); tr.appendChild(e); tr.appendChild(t); subRows.appendChild(tr);
+    });
+    subTable.hidden = !list.length;
+    subSearch.hidden = !subList.length;
+    subEmpty.hidden = !!list.length;
+    subEmpty.textContent = subList.length ? "No subscribers match \u201c" + q + "\u201d." : "No one has subscribed yet.";
+  }
+  function loadSubCount() {
+    subscribersApi("?format=json").then(function (r) { return r.json(); }).then(function (d) {
+      subList = d.subscribers || [];
+      subCount.textContent = "(" + subList.length + ")";
+      renderSubs();
+    }, function () {
+      subCount.textContent = "";
+      subEmpty.textContent = "Couldn't load the list just now. Refresh the page to try again."; subEmpty.hidden = false;
+    });
+  }
+  if (subSearch) subSearch.addEventListener("input", renderSubs);
   if (subBtn) subBtn.addEventListener("click", function () {
     var label = subBtn.textContent;
     subBtn.disabled = true; subBtn.textContent = "Preparing…"; subErr.hidden = true;
