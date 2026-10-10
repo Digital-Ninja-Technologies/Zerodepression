@@ -84,12 +84,12 @@
     <div class="side-card" style="margin-bottom:14px">
       <h2>Newsletter subscribers <span id="sub-count" class="fine"></span></h2>
       <p class="fine" style="margin-top:0">Everyone who signs up with the "Stay in the loop" form in the site footer. The Excel file is built fresh each time, so it always has the latest sign-ups.</p>
-      <button id="sub-download" class="btn btn-primary" type="button">Download subscribers (Excel)</button>
-      <p id="sub-error" class="form-status is-error" role="alert" hidden></p>
       <div class="sub-tools field">
         <label class="sr-only" for="sub-search">Search subscribers</label>
         <input id="sub-search" type="search" placeholder="Search by name or email" autocomplete="off" hidden>
+        <button id="sub-download" class="btn btn-primary" type="button">Download subscribers (Excel)</button>
       </div>
+      <p id="sub-error" class="form-status is-error" role="alert" hidden></p>
       <div class="sub-table-wrap">
         <table class="sub-table" id="sub-table" hidden>
           <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Subscribed</th></tr></thead>

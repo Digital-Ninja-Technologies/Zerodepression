@@ -908,14 +908,37 @@
 }
 
 .sub-tools.field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
   margin: 16px 0 10px;
 }
 
 .sub-tools input {
-  width: 100%;
-  max-width: 360px;
-  min-height: 44px;
-  padding: 10px 14px;
+  flex: 1 1 260px;
+  width: auto;
+  max-width: 420px;
+  min-height: 52px;
+  padding: 10px 16px;
+}
+
+.sub-tools .btn {
+  flex: none;
+  margin-left: auto;
+}
+
+.sub-tools input[hidden] + .btn {
+  margin-left: 0;
+}
+
+@media (max-width: 560px) {
+  .sub-tools input,
+  .sub-tools .btn {
+    flex: 1 1 100%;
+    max-width: none;
+    margin-left: 0;
+  }
 }
 
 .sub-table-wrap {
