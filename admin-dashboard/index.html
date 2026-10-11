@@ -67,6 +67,59 @@
     </div>
     <div id="banner-conn-top" class="banner banner--conn" role="status" hidden>Something went wrong. Check your connection and try again.</div>
 
+    <div id="analytics" class="side-card an-card" style="margin-bottom:14px">
+      <div class="an-head">
+        <div>
+          <h2 style="margin:0">Analytics</h2>
+          <p id="an-range-label" class="fine" style="margin:4px 0 0"></p>
+        </div>
+        <div class="an-controls" role="group" aria-label="Date range">
+          <button type="button" class="an-range" data-days="7" aria-pressed="false">7 days</button>
+          <button type="button" class="an-range" data-days="30" aria-pressed="true">30 days</button>
+          <button type="button" class="an-range" data-days="90" aria-pressed="false">90 days</button>
+          <button id="an-refresh" type="button" class="btn-quiet">Refresh</button>
+        </div>
+      </div>
+      <p id="an-error" class="form-status is-error" role="alert" hidden>Couldn't load analytics just now. Check your connection and press Refresh.</p>
+      <div id="an-body" hidden>
+        <div id="an-live" class="an-tiles an-tiles--live"></div>
+        <h3 class="an-h">Counselling</h3>
+        <div id="an-tiles" class="an-tiles"></div>
+        <div class="an-panel">
+          <div class="an-panel__head"><h4>Chats per day</h4>
+            <p class="an-legend"><span><i style="background:#1d6fb8"></i>Answered</span><span><i style="background:#e28f00"></i>Not answered</span></p></div>
+          <div id="an-chats"></div>
+          <details class="an-details"><summary>Show as a table</summary><div id="an-chat-table"></div></details>
+        </div>
+        <div class="an-panel">
+          <div class="an-panel__head"><h4>When people reach out</h4><p id="an-hours-note" class="fine" style="margin:0"></p></div>
+          <div id="an-hours"></div>
+        </div>
+        <p class="fine">Counts only. No messages, nicknames or contact details are read here. Chats from the last few days are counted live; older days come from the nightly totals the site saves.</p>
+
+        <h3 class="an-h">Website and games</h3>
+        <div id="an-web-setup" class="an-setup" hidden>
+          <p><strong>Website traffic isn't switched on yet.</strong> It needs two things from Google Analytics:</p>
+          <ol>
+            <li>In Google Analytics, open <strong>Admin → Property access management</strong> and add <code>firebase-adminsdk-fbsvc@zerodepression.iam.gserviceaccount.com</code> as a <strong>Viewer</strong>.</li>
+            <li>Copy the numeric <strong>Property ID</strong> from <strong>Admin → Property settings</strong> and add it in Vercel as <code>GA_PROPERTY_ID</code>.</li>
+          </ol>
+        </div>
+        <p id="an-web-error" class="form-status is-error" hidden></p>
+        <div id="an-web-body" hidden>
+          <div id="an-web-tiles" class="an-tiles"></div>
+          <div class="an-panel"><div class="an-panel__head"><h4>Visitors per day</h4></div><div id="an-visitors"></div></div>
+          <div class="an-grid">
+            <div class="an-panel"><h4>Most-viewed pages</h4><div id="an-pages"></div></div>
+            <div class="an-panel"><h4>Games</h4><div id="an-games"></div></div>
+            <div class="an-panel"><h4>Where visitors come from</h4><div id="an-sources"></div></div>
+            <div class="an-panel"><h4>Top cities</h4><div id="an-cities"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <div class="side-card" style="margin-bottom:14px">
       <h2>Add a counsellor</h2>
       <form id="add-form" novalidate style="display:grid;gap:10px;max-width:520px">
@@ -108,6 +161,6 @@
 </main>
 <footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">Confidential. Admin access only.</p></div></footer>
 
-<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/admin.js" defer></script>
+<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/admin-analytics.js" defer></script><script src="/assets/js/admin.js" defer></script>
 </body>
 </html>

@@ -150,5 +150,11 @@
       "destination": "/international-day-of-the-girl-child-her-mind-matters-too/",
       "permanent": true
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/analytics-snapshot",
+      "schedule": "30 23 * * *"
+    }
   ]
 }

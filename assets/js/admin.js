@@ -130,6 +130,8 @@
     el.name.textContent = profile.displayName;
     showView("admin");
     loadSubCount();
+    window.zdAdminIdToken = function () { return fb.staff.idToken(); };
+    if (window.zdAnalyticsLoad) window.zdAnalyticsLoad();
     s.unsub = fb.admin.watchCounsellors(function (list) { s.people = list; el.conn.hidden = true; render(); }, function (err) {
       if (err && err.code === "permission-denied") { signOutNow("This account isn't allowed to manage counsellors."); return; }
       el.conn.hidden = false;
