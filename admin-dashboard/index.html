@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Manage counsellors | ZeroDepression</title>
+<title>Admin dashboard | ZeroDepression</title>
 <meta name="description" content="Admin area for managing ZeroDepression volunteer counsellors.">
 <meta name="theme-color" content="#fffaf2">
 <link rel="canonical" href="https://www.zerodepression.org/admin-dashboard/">
@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ZeroDepression">
-<meta property="og:title" content="Manage counsellors | ZeroDepression">
+<meta property="og:title" content="Admin dashboard | ZeroDepression">
 <meta property="og:description" content="Admin area for managing ZeroDepression volunteer counsellors.">
 <meta property="og:url" content="https://www.zerodepression.org/admin-dashboard/">
 <meta property="og:image" content="https://www.zerodepression.org/assets/img/og.png">
@@ -56,22 +56,44 @@
     </div>
   </section>
 
-  <section id="view-admin" hidden aria-label="Manage counsellors">
-    <h1 class="sr-only">Manage counsellors</h1>
-    <div class="side-card" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
-      <div><strong>Signed in as <span id="me-name"></span></strong><br><span class="fine">Admin</span></div>
-      <div class="room-actions">
-        <a class="btn-quiet" href="/counsellor/">Open my inbox</a>
-        <button id="logout-btn" class="btn-quiet" type="button">Sign out</button>
-      </div>
+  <section id="view-admin" class="adm" hidden aria-label="Admin dashboard">
+    <h1 class="sr-only">Admin dashboard</h1>
+    <div class="adm-topbar">
+      <button id="adm-menu-btn" class="adm-menu-btn" type="button" aria-expanded="false" aria-controls="adm-side"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><span>Menu</span></button>
+      <span id="adm-current" class="adm-topbar__title">Analytics</span>
     </div>
-    <div id="banner-conn-top" class="banner banner--conn" role="status" hidden>Something went wrong. Check your connection and try again.</div>
+    <div id="adm-scrim" class="adm-scrim" hidden></div>
+    <aside id="adm-side" class="adm-side" aria-label="Admin menu">
+      <nav class="adm-nav">
+        <p class="adm-nav__label">Dashboard</p>
+        <ul>
+          <li><a href="#analytics" data-panel="analytics" aria-current="page"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></a></li>
+          <li><a href="#counsellors" data-panel="counsellors"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Counsellors</span><span class="adm-badge" data-badge="count"></span></a></li>
+          <li><a href="#newsletter" data-panel="newsletter"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>Newsletter</span><span class="adm-badge" data-badge="sub-count"></span></a></li>
+        </ul>
+        <p class="adm-nav__label">Shortcuts</p>
+        <ul>
+          <li><a href="/counsellor/"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>Counsellor inbox</span></a></li>
+          <li><a href="/play/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="6" width="20" height="12" rx="6"/><line x1="7" y1="10" x2="7" y2="14"/><line x1="5" y1="12" x2="9" y2="12"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg><span>Games</span></a></li>
+          <li><a href="/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>View the website</span></a></li>
+        </ul>
+      </nav>
+      <div class="adm-me">
+        <span id="adm-avatar" class="adm-me__avatar" aria-hidden="true">A</span>
+        <div class="adm-me__who"><strong id="me-name"></strong><span>Admin</span></div>
+        <button id="logout-btn" class="adm-me__out" type="button" aria-label="Sign out" title="Sign out"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+      </div>
+    </aside>
 
-    <div id="analytics" class="side-card an-card" style="margin-bottom:14px">
+    <div class="adm-main">
+      <div id="banner-conn-top" class="banner banner--conn" role="status" hidden>Something went wrong. Check your connection and try again.</div>
+
+      <div id="panel-analytics" class="adm-panel" data-panel-body="analytics">
+        <header class="adm-panel__head"><h2 class="adm-panel__title">Analytics</h2><p>How ZeroDepression is doing: chats, counsellors, the website and the games.</p></header>
+    <div id="analytics" class="side-card an-card" >
       <div class="an-head">
         <div>
-          <h2 style="margin:0">Analytics</h2>
-          <p id="an-range-label" class="fine" style="margin:4px 0 0"></p>
+                    <p id="an-range-label" class="fine" style="margin:4px 0 0"></p>
         </div>
         <div class="an-controls" role="group" aria-label="Date range">
           <button type="button" class="an-range" data-days="7" aria-pressed="false">7 days</button>
@@ -119,7 +141,10 @@
       </div>
     </div>
 
+      </div>
 
+      <div id="panel-counsellors" class="adm-panel" data-panel-body="counsellors" hidden>
+        <header class="adm-panel__head"><h2 class="adm-panel__title">Counsellors</h2><p>Add volunteers, change roles, and switch access on or off.</p></header>
     <div class="side-card" style="margin-bottom:14px">
       <h2>Add a counsellor</h2>
       <form id="add-form" novalidate style="display:grid;gap:10px;max-width:520px">
@@ -134,6 +159,14 @@
       <p class="fine">There is no invite email. Tell them to open <strong>/counsellor/</strong> and request a sign-in link with this email address.</p>
     </div>
 
+    <div class="side-card">
+      <h2>Counsellors <span id="count" class="fine"></span></h2>
+      <ul id="clist" class="qlist"></ul>
+    </div>
+      </div>
+
+      <div id="panel-newsletter" class="adm-panel" data-panel-body="newsletter" hidden>
+        <header class="adm-panel__head"><h2 class="adm-panel__title">Newsletter</h2><p>Everyone who signed up to hear from ZeroDepression.</p></header>
     <div class="side-card" style="margin-bottom:14px">
       <h2>Newsletter subscribers <span id="sub-count" class="fine"></span></h2>
       <p class="fine" style="margin-top:0">Everyone who signs up with the "Stay in the loop" form in the site footer. The Excel file is built fresh each time, so it always has the latest sign-ups.</p>
@@ -151,16 +184,13 @@
       </div>
       <p id="sub-empty" class="fine" hidden></p>
     </div>
-
-    <div class="side-card">
-      <h2>Counsellors <span id="count" class="fine"></span></h2>
-      <ul id="clist" class="qlist"></ul>
+      </div>
     </div>
   </section>
 </div>
 </main>
 <footer class="site-footer" style="padding-block:24px"><div class="container"><p style="margin:0;font-size:.875rem">Confidential. Admin access only.</p></div></footer>
 
-<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/admin-analytics.js" defer></script><script src="/assets/js/admin.js" defer></script>
+<script src="/assets/js/site.js" defer></script><script src="/assets/js/zd-config.js" defer></script><script src="/assets/js/vendor/zd-firebase.js" defer></script><script src="/assets/js/admin-analytics.js" defer></script><script src="/assets/js/admin.js" defer></script><script src="/assets/js/admin-nav.js" defer></script>
 </body>
 </html>
