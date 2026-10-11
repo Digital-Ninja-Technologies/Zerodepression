@@ -59,6 +59,96 @@
       "source": "/counsellor-admin/(.*)",
       "destination": "/admin-dashboard/",
       "permanent": false
+    },
+    {
+      "source": "/blogDetails",
+      "destination": "/things-to-consider-before-choosing-a-counsellor-or-therapist/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails/(.*)",
+      "destination": "/things-to-consider-before-choosing-a-counsellor-or-therapist/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails2",
+      "destination": "/anybody-can-be-depressed/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails2/(.*)",
+      "destination": "/anybody-can-be-depressed/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails3",
+      "destination": "/what-is-depression/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails3/(.*)",
+      "destination": "/what-is-depression/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails4",
+      "destination": "/how-to-help-a-friend-who-is-depressed/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails4/(.*)",
+      "destination": "/how-to-help-a-friend-who-is-depressed/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails5",
+      "destination": "/small-daily-habits-that-help-on-hard-days/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails5/(.*)",
+      "destination": "/small-daily-habits-that-help-on-hard-days/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails6",
+      "destination": "/talking-to-your-family-about-depression/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails6/(.*)",
+      "destination": "/talking-to-your-family-about-depression/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails7",
+      "destination": "/lived-experiences-heard-world-mental-health-day-2026/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails7/(.*)",
+      "destination": "/lived-experiences-heard-world-mental-health-day-2026/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails8",
+      "destination": "/lagos-life-lagos-run-and-your-mental-health/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails8/(.*)",
+      "destination": "/lagos-life-lagos-run-and-your-mental-health/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails9",
+      "destination": "/international-day-of-the-girl-child-her-mind-matters-too/",
+      "permanent": true
+    },
+    {
+      "source": "/blogDetails9/(.*)",
+      "destination": "/international-day-of-the-girl-child-her-mind-matters-too/",
+      "permanent": true
     }
   ]
 }
