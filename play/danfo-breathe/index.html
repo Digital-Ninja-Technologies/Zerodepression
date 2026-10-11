@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Danfo Breathe | ZeroDepression games</title>
+<meta name="description" content="Drive a danfo across Lagos at sunset. Hold to breathe in, let go to breathe out. A free 2-minute breathing game.">
+<meta name="theme-color" content="#5a1a5e">
+<link rel="canonical" href="https://www.zerodepression.org/play/danfo-breathe/">
+<link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ZeroDepression">
+<meta property="og:title" content="Danfo Breathe: a free game from ZeroDepression">
+<meta property="og:description" content="Drive a danfo across Lagos at sunset. Hold to breathe in, let go to breathe out. A free 2-minute breathing game.">
+<meta property="og:url" content="https://www.zerodepression.org/play/danfo-breathe/">
+<meta property="og:image" content="https://www.zerodepression.org/play/og/danfo-breathe.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/play/play.css">
+<link rel="stylesheet" href="/play/danfo-breathe/game.css">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4RCRQ4Q5N7"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-4RCRQ4Q5N7');</script>
+</head>
+<body class="play-page" data-game="danfo-breathe">
+<header class="play-bar">
+  <a class="play-bar__logo" href="/" aria-label="ZeroDepression home"><img src="/assets/img/logo.webp" alt="ZeroDepression" width="908" height="357"></a>
+  <nav class="play-bar__nav" aria-label="Games">
+    <a class="play-bar__link" href="/play/">All games</a>
+    <button class="play-help-btn" type="button" data-open-help>Talk to someone</button>
+  </nav>
+</header>
+<main id="main" class="game-stage">
+<section id="intro" class="game-panel">
+  <p class="game-tag">A 2-minute breathing game</p>
+  <h1>Danfo Breathe</h1>
+  <p class="lead">Drive a danfo across Lagos at sunset. <strong>Hold</strong> the screen (or the space bar) to breathe in, <strong>let go</strong> to breathe out. Breathe in time with the circle and your bus keeps moving and picks up passengers.</p>
+  <p id="best" class="db-best" hidden>Your best so far: <strong id="best-n">0</strong> calm breaths</p>
+
+  <fieldset class="db-field">
+    <legend>How long?</legend>
+    <div id="len" class="choice-row">
+      <button type="button" value="1" aria-pressed="false">1 minute</button>
+      <button type="button" value="2" aria-pressed="true">2 minutes</button>
+      <button type="button" value="3" aria-pressed="false">3 minutes</button>
+    </div>
+  </fieldset>
+  <fieldset class="db-field">
+    <legend>Breathing rhythm</legend>
+    <div id="rhythm" class="choice-row">
+      <button type="button" value="calm" aria-pressed="true">Calm: 4 in, 4 out</button>
+      <button type="button" value="relax" aria-pressed="false">Relax: 4 in, 6 out</button>
+      <button type="button" value="box" aria-pressed="false">Box: in, hold, out, rest</button>
+    </div>
+  </fieldset>
+  <fieldset class="db-field">
+    <legend>How are you feeling right now? <span class="db-optional">(optional)</span></legend>
+    <div id="mood-before"></div>
+  </fieldset>
+  <button id="start" class="btn btn-primary btn-lg" type="button">Start driving</button>
+  <p class="db-note">Sit comfortably. If breathing exercises ever make you feel dizzy or uneasy, stop and breathe normally.</p>
+</section>
+
+<section id="play" class="db-play" hidden data-phase="in">
+  <div class="db-hud">
+    <div class="db-progress" aria-hidden="true"><span id="progress"></span></div>
+    <button id="end-early" class="db-end" type="button">End ride</button>
+  </div>
+  <div class="db-canvas-wrap">
+    <canvas id="road" aria-label="A danfo driving through Lagos. The circle at the top grows when you should breathe in and shrinks when you should breathe out."></canvas>
+    <p class="db-cue" aria-live="polite"><span id="cue">Breathe in</span> <span id="cue-count" class="db-count">4</span></p>
+    <p id="bubble" class="db-bubble" hidden></p>
+  </div>
+  <button id="hold" class="db-hold" type="button" aria-label="Hold to breathe in, release to breathe out">
+    <span class="db-hold__in">Hold to breathe in</span><span class="db-hold__out">Let go to breathe out</span>
+  </button>
+</section>
+
+<section id="end" class="game-panel" hidden>
+  <p class="game-tag">Ride complete</p>
+  <h1>You made it across Lagos</h1>
+  <div id="after-wrap">
+    <p class="lead">How do you feel now?</p>
+    <div id="mood-after"></div>
+    <button id="skip-mood" class="db-skip" type="button">Skip</button>
+  </div>
+  <div id="result" class="result-card" hidden>
+    <p class="big"><span id="r-breaths">0</span> calm breaths</p>
+    <p id="r-mood"></p>
+    <div class="stat-row">
+      <div><strong id="r-riders">0</strong><span>passengers picked up</span></div>
+      <div><strong id="r-sync">0%</strong><span>in rhythm over <span id="r-mins">2</span> min</span></div>
+    </div>
+    <p id="low-note" class="db-low" hidden>Still feeling heavy? You don't have to carry it alone. <button type="button" class="db-linkbtn" data-open-help>Talk to a counsellor</button>, free and anonymous.</p>
+    <div class="db-end-actions">
+      <button id="share-btn" class="btn btn-primary" type="button" data-play-share="" data-play-share-path="/play/danfo-breathe/">Challenge a friend</button>
+      <button id="again" class="btn btn-ghost" type="button">Drive again</button>
+      <a class="btn btn-ghost" href="/play/">Try another game</a>
+    </div>
+  </div>
+</section>
+</main>
+<p class="game-foot">A free game from <a href="/">ZeroDepression</a>. Need to talk? Call <a href="tel:+23480011002200">0800 1100 2200</a> (free) or <a href="/chat/">chat with a counsellor</a>.</p>
+<script src="/play/play.js"></script>
+<script src="/play/danfo-breathe/game.js"></script>
+</body>
+</html>

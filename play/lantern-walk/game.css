@@ -1,0 +1,43 @@
+.play-page[data-game="lantern-walk"] { background: #10213f; color: #dbe3f2; }
+.play-page[data-game="lantern-walk"] .play-bar { background: rgba(16, 33, 63, 0.92); border-bottom-color: #1f3358; }
+.play-page[data-game="lantern-walk"] .play-bar__link { color: var(--cream); }
+.play-page[data-game="lantern-walk"] .play-bar__link:hover { background: #1f3358; }
+.play-page[data-game="lantern-walk"] .game-panel h1, .play-page[data-game="lantern-walk"] .game-panel h2 { color: var(--cream); }
+.play-page[data-game="lantern-walk"] .game-tag { color: var(--amber); }
+.play-page[data-game="lantern-walk"] .lead { color: #dbe3f2; }
+.play-page[data-game="lantern-walk"] .btn-ghost { color: var(--cream); border-color: rgba(255, 250, 242, 0.6); }
+.play-page[data-game="lantern-walk"] .game-foot { color: #b9c4da; }
+.play-page[data-game="lantern-walk"] .game-foot a { color: var(--cream); }
+.lw-intro { padding-bottom: 8px; }
+.lw-total { margin: 0; font-weight: 700; color: var(--amber); }
+.lw-scene { position: relative; height: min(62vh, 560px); min-height: 360px; }
+#sky { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; touch-action: manipulation; }
+.lw-card {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(380px, calc(100% - 32px));
+  background: var(--cream); color: var(--ink); border-radius: 24px; padding: 22px; text-align: center;
+  box-shadow: 0 0 0 4px var(--lc, #ffa500), 0 0 60px var(--lc, #ffa500); display: flex; flex-direction: column; gap: 12px; align-items: center;
+  animation: lw-in .35s ease-out;
+}
+@keyframes lw-in { from { opacity: 0; transform: translate(-50%, -44%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+.lw-card__from { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--muted); }
+.lw-card__msg { margin: 0; font-family: var(--font-display); font-size: clamp(1.5rem, 5vw, 1.9rem); line-height: 1.2; }
+.lw-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.lw-read { margin: 0; }
+.lw-lit { margin: 0; background: #1f3358; color: var(--cream); border-radius: 16px; padding: 12px 16px; font-weight: 600; }
+.lw-light { background: #16284a; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.lw-light h2 { margin: 0; font-size: 1.6rem; }
+.lw-light p { margin: 0; }
+.lw-fieldset { border: 0; padding: 0; margin: 0; }
+.lw-msgs { display: grid; gap: 8px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+.lw-msg { display: flex; gap: 10px; align-items: flex-start; background: #1f3358; border: 2px solid transparent; border-radius: 14px; padding: 12px 14px; cursor: pointer; color: var(--cream); }
+.lw-msg:has(input:checked) { border-color: var(--amber); background: #26406b; }
+.lw-msg input { margin-top: 4px; accent-color: var(--amber); width: 18px; height: 18px; flex: none; }
+.lw-label { font-weight: 700; color: var(--cream); }
+.lw-swatches { display: flex; gap: 12px; }
+.lw-swatch { width: 48px; height: 48px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+.lw-swatch[aria-pressed="true"] { border-color: var(--cream); box-shadow: 0 0 0 3px #16284a inset; }
+.lw-small { font-size: 0.9rem; color: #b9c4da; }
+.lw-help { margin: 8px 0 0; background: #16284a; border-radius: 14px; padding: 12px 14px; }
+.lw-linkbtn { font: inherit; font-weight: 700; color: var(--amber); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.btn-lg { font-size: 1.1rem; padding: 16px 28px; }
+.lw-light .btn[disabled] { opacity: 0.5; cursor: not-allowed; }

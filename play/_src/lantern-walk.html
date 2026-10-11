@@ -1,0 +1,43 @@
+<section class="lw-intro game-panel">
+  <p class="game-tag">A game about connection, about 3 minutes</p>
+  <h1>Lantern Walk</h1>
+  <p class="lead">It's a quiet night in the village. Lanterns are floating overhead, each one left by someone who wanted a stranger to feel less alone. Tap a lantern to read it. Then light one of your own.</p>
+  <p id="total" class="lw-total">Lanterns float here from people all over Nigeria.</p>
+</section>
+
+<section class="lw-scene" aria-label="Night sky with lanterns">
+  <canvas id="sky" aria-label="Lanterns floating in a night sky over a village. Tap a lantern to read its message, or use the Read a lantern button."></canvas>
+  <div id="card" class="lw-card" role="dialog" aria-labelledby="card-msg" hidden>
+    <p id="card-from" class="lw-card__from"></p>
+    <p id="card-msg" class="lw-card__msg"></p>
+    <button id="card-close" class="btn btn-primary" type="button">Keep walking</button>
+  </div>
+</section>
+
+<section class="game-panel lw-controls">
+  <div class="lw-row">
+    <button id="next-lantern" class="btn btn-ghost" type="button">Read a lantern</button>
+    <button id="open-light" class="btn btn-primary" type="button">Light a lantern for someone</button>
+  </div>
+  <p class="lw-read">Lanterns you've read: <strong id="read-n">0</strong></p>
+  <p id="lit-msg" class="lw-lit" role="status" hidden></p>
+  <div id="after-light" class="lw-row" hidden>
+    <button id="share-btn" class="btn btn-primary" type="button" data-play-share="I just lit a lantern for a stranger on Lantern Walk 🏮 Read the kind messages people across Nigeria left, and light one too:" data-play-share-path="/play/lantern-walk/">Invite a friend to light one</button>
+    <a class="btn btn-ghost" href="/play/">Try another game</a>
+  </div>
+
+  <div id="light" class="lw-light" hidden>
+    <h2>Light a lantern</h2>
+    <p>Choose the words you'd want a stranger to read tonight.</p>
+    <fieldset class="lw-fieldset">
+      <legend class="sr-only">Message</legend>
+      <div id="msg-list" class="lw-msgs"></div>
+    </fieldset>
+    <p class="lw-label">Lantern colour</p>
+    <div id="colours" class="lw-swatches"></div>
+    <button id="release" class="btn btn-primary btn-lg" type="button" disabled>Release my lantern</button>
+    <p class="lw-small">Lanterns carry only the message you chose. No names, nothing about you.</p>
+  </div>
+
+  <p class="lw-help">If you're the one who needs a lantern tonight, <button type="button" class="lw-linkbtn" data-open-help>talk to a counsellor</button>. It's free and anonymous.</p>
+</section>

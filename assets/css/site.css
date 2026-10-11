@@ -2378,3 +2378,27 @@ dialog.lightbox img {
   height: 1px;
   overflow: hidden;
 }
+
+/* Homepage games promo */
+.home-games__inner { background: var(--ink); color: var(--sand); border-radius: 28px; padding: clamp(28px, 5vw, 56px); display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 48px); align-items: center; }
+.home-games__inner h2 { color: var(--cream); margin: 6px 0 12px; }
+.home-games__inner .eyebrow { color: var(--amber); }
+.home-games__inner .lead { color: var(--sand); margin: 0 0 22px; }
+.home-games__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.home-games__list a { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; background: rgba(255, 250, 242, 0.08); color: var(--cream); font-weight: 700; text-decoration: none; }
+.home-games__list a:hover { background: rgba(255, 250, 242, 0.16); }
+.home-games__dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+@media (max-width: 820px) { .home-games__inner { grid-template-columns: minmax(0, 1fr); } }
+
+/* Seven nav items (Games added): keep the menu and both buttons on one line on laptop widths. */
+.nav-cta .btn { white-space: nowrap; }
+@media (min-width: 1081px) and (max-width: 1340px) {
+  .nav { gap: 14px; }
+  .nav-links { gap: 0; }
+  .nav-links a { padding: 10px 10px; }
+}
+@media (min-width: 1081px) and (max-width: 1200px) {
+  .nav-links a { padding: 10px 7px; font-size: 0.875rem; }
+  .nav-cta { gap: 8px; }
+  .nav-cta .btn { padding-inline: 14px; }
+}

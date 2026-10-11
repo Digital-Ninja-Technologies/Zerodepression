@@ -1,0 +1,36 @@
+.play-page[data-game="irorun-garden"] { background: #f2f8f4; }
+.ig-garden-card { background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); }
+.ig-garden { width: 100%; height: auto; display: block; }
+.ig-grow { padding: 14px 18px 4px; }
+.ig-grow p { margin: 0 0 8px; font-weight: 700; color: var(--ink); }
+.ig-bar { height: 10px; background: #e6f2ec; border-radius: 999px; overflow: hidden; }
+.ig-bar span { display: block; height: 100%; width: 0; background: var(--sage); transition: width .5s ease; }
+.ig-stats { padding: 14px 18px 18px; }
+.ig-stats div { background: #e6f2ec; }
+.ig-toast { margin: 0; background: var(--sage); color: var(--white); font-weight: 700; border-radius: 16px; padding: 12px 16px; }
+.ig-h { margin: 12px 0 0; font-size: 1.5rem; color: var(--ink); }
+.ig-sub { margin: 0; font-size: 0.95rem; color: var(--muted); }
+.ig-actions { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ig-action {
+  width: 100%; font: inherit; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  background: var(--white); color: var(--ink); border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px; min-height: 56px;
+}
+.ig-action:hover:not(:disabled) { border-color: var(--sage); }
+.ig-action__label { font-weight: 600; }
+.ig-action__state { flex: none; font-size: 0.85rem; font-weight: 700; color: #1d5a4d; background: #e6f2ec; border-radius: 999px; padding: 4px 10px; }
+.ig-action.is-done { opacity: 0.7; cursor: default; background: #f2f8f4; }
+.ig-action.is-done .ig-action__label { text-decoration: line-through; text-decoration-color: var(--sage); }
+.ig-box { background: var(--white); border-radius: 20px; padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+.ig-box textarea { font: inherit; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; resize: vertical; color: var(--ink); }
+.ig-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.ig-breathe { align-items: center; text-align: center; }
+.ig-ring { width: 90px; height: 90px; border-radius: 50%; background: var(--sage); opacity: 0.85; transform: scale(0.6); transition: transform 4s ease-in-out; }
+.ig-ring.is-in { transform: scale(1.2); }
+.ig-ring.is-out { transform: scale(0.6); }
+.ig-breathe__label { margin: 8px 0 0; font-family: var(--font-display); font-size: 1.6rem; color: var(--ink); }
+.ig-notes { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.ig-notes li { background: var(--white); border-radius: 14px; padding: 10px 14px; border-left: 0; color: var(--ink); }
+.ig-end { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.ig-help { margin: 0; background: var(--sand); border-radius: 14px; padding: 12px 14px; }
+.ig-linkbtn { font: inherit; font-weight: 700; color: var(--ink); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.ig-reset { align-self: flex-start; font: inherit; font-size: 0.9rem; color: var(--muted); background: none; border: 0; text-decoration: underline; cursor: pointer; padding: 8px 0; }

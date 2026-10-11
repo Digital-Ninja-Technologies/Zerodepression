@@ -1,0 +1,68 @@
+<section id="intro" class="game-panel">
+  <p class="game-tag">A 2-minute breathing game</p>
+  <h1>Danfo Breathe</h1>
+  <p class="lead">Drive a danfo across Lagos at sunset. <strong>Hold</strong> the screen (or the space bar) to breathe in, <strong>let go</strong> to breathe out. Breathe in time with the circle and your bus keeps moving and picks up passengers.</p>
+  <p id="best" class="db-best" hidden>Your best so far: <strong id="best-n">0</strong> calm breaths</p>
+
+  <fieldset class="db-field">
+    <legend>How long?</legend>
+    <div id="len" class="choice-row">
+      <button type="button" value="1" aria-pressed="false">1 minute</button>
+      <button type="button" value="2" aria-pressed="true">2 minutes</button>
+      <button type="button" value="3" aria-pressed="false">3 minutes</button>
+    </div>
+  </fieldset>
+  <fieldset class="db-field">
+    <legend>Breathing rhythm</legend>
+    <div id="rhythm" class="choice-row">
+      <button type="button" value="calm" aria-pressed="true">Calm: 4 in, 4 out</button>
+      <button type="button" value="relax" aria-pressed="false">Relax: 4 in, 6 out</button>
+      <button type="button" value="box" aria-pressed="false">Box: in, hold, out, rest</button>
+    </div>
+  </fieldset>
+  <fieldset class="db-field">
+    <legend>How are you feeling right now? <span class="db-optional">(optional)</span></legend>
+    <div id="mood-before"></div>
+  </fieldset>
+  <button id="start" class="btn btn-primary btn-lg" type="button">Start driving</button>
+  <p class="db-note">Sit comfortably. If breathing exercises ever make you feel dizzy or uneasy, stop and breathe normally.</p>
+</section>
+
+<section id="play" class="db-play" hidden data-phase="in">
+  <div class="db-hud">
+    <div class="db-progress" aria-hidden="true"><span id="progress"></span></div>
+    <button id="end-early" class="db-end" type="button">End ride</button>
+  </div>
+  <div class="db-canvas-wrap">
+    <canvas id="road" aria-label="A danfo driving through Lagos. The circle at the top grows when you should breathe in and shrinks when you should breathe out."></canvas>
+    <p class="db-cue" aria-live="polite"><span id="cue">Breathe in</span> <span id="cue-count" class="db-count">4</span></p>
+    <p id="bubble" class="db-bubble" hidden></p>
+  </div>
+  <button id="hold" class="db-hold" type="button" aria-label="Hold to breathe in, release to breathe out">
+    <span class="db-hold__in">Hold to breathe in</span><span class="db-hold__out">Let go to breathe out</span>
+  </button>
+</section>
+
+<section id="end" class="game-panel" hidden>
+  <p class="game-tag">Ride complete</p>
+  <h1>You made it across Lagos</h1>
+  <div id="after-wrap">
+    <p class="lead">How do you feel now?</p>
+    <div id="mood-after"></div>
+    <button id="skip-mood" class="db-skip" type="button">Skip</button>
+  </div>
+  <div id="result" class="result-card" hidden>
+    <p class="big"><span id="r-breaths">0</span> calm breaths</p>
+    <p id="r-mood"></p>
+    <div class="stat-row">
+      <div><strong id="r-riders">0</strong><span>passengers picked up</span></div>
+      <div><strong id="r-sync">0%</strong><span>in rhythm over <span id="r-mins">2</span> min</span></div>
+    </div>
+    <p id="low-note" class="db-low" hidden>Still feeling heavy? You don't have to carry it alone. <button type="button" class="db-linkbtn" data-open-help>Talk to a counsellor</button>, free and anonymous.</p>
+    <div class="db-end-actions">
+      <button id="share-btn" class="btn btn-primary" type="button" data-play-share="" data-play-share-path="/play/danfo-breathe/">Challenge a friend</button>
+      <button id="again" class="btn btn-ghost" type="button">Drive again</button>
+      <a class="btn btn-ghost" href="/play/">Try another game</a>
+    </div>
+  </div>
+</section>

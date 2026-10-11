@@ -1,0 +1,49 @@
+<section id="intro" class="game-panel oe-intro">
+  <p class="game-tag">A thinking game, about 5 minutes</p>
+  <h1>Ọjà Èrò: The Thought Market</h1>
+  <p class="lead">Welcome to your stall. Customers bring heavy thoughts they've been carrying. Your job: spot the <strong>thinking trap</strong> behind each one, then help them trade it for a <strong>lighter, truer</strong> thought.</p>
+  <p class="oe-why">Thinking traps are habits of mind everyone falls into, especially when stressed or low. Learning to notice them is a skill counsellors use every day.</p>
+  <p id="best" class="oe-best" hidden>Your best day: <strong id="best-n">0</strong> customers left lighter</p>
+  <button id="start" class="btn btn-primary btn-lg" type="button">Open the stall</button>
+</section>
+
+<section id="round" class="game-panel oe-round" hidden>
+  <div class="oe-top">
+    <span id="count" class="oe-count">Customer 1 of 8</span>
+    <span class="oe-basket" aria-live="polite"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14l-1.5 8.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5z"/><path d="M8 11l4-6 4 6"/></svg><span id="basket-n">0</span> left lighter</span>
+  </div>
+  <div id="stall" class="oe-stall">
+    <div class="oe-awning" aria-hidden="true"></div>
+    <div class="oe-customer">
+      <span id="avatar" class="oe-avatar" aria-hidden="true">T</span>
+      <div>
+        <p id="cust-name" class="oe-name"></p>
+        <p id="thought" class="oe-thought"></p>
+      </div>
+    </div>
+  </div>
+  <p id="step-label" class="oe-step"></p>
+  <div id="options" class="oe-options"></div>
+  <p id="feedback" class="oe-feedback" hidden aria-live="polite"></p>
+  <button id="next" class="btn btn-primary" type="button" hidden>Next customer</button>
+</section>
+
+<section id="end" class="game-panel" hidden>
+  <p class="game-tag">Market closed for today</p>
+  <h1>Your stall did good work</h1>
+  <div class="result-card">
+    <div class="stat-row">
+      <div><strong id="e-lighter">0</strong><span id="e-lighter-l">customers left lighter</span></div>
+      <div><strong id="e-traps">0</strong><span>thinking traps spotted</span></div>
+    </div>
+    <p>Next time a heavy thought shows up in your own head, try the same two steps: name the trap, then look for the kind <em>and</em> realistic version.</p>
+    <h2 class="oe-learned-h">Traps you met today</h2>
+    <ul id="learned" class="oe-learned"></ul>
+    <p class="oe-help">Some thoughts are too heavy to sort alone. <button type="button" class="oe-linkbtn" data-open-help>Talk to a counsellor</button>, free and anonymous.</p>
+    <div class="oe-end-actions">
+      <button id="share-btn" class="btn btn-primary" type="button" data-play-share="" data-play-share-path="/play/oja-ero/">Share with a friend</button>
+      <button id="again" class="btn btn-ghost" type="button">Open the stall again</button>
+      <a class="btn btn-ghost" href="/play/">Try another game</a>
+    </div>
+  </div>
+</section>
