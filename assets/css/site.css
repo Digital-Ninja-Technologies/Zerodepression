@@ -2402,3 +2402,8 @@ dialog.lightbox img {
   .nav-cta { gap: 8px; }
   .nav-cta .btn { padding-inline: 14px; }
 }
+
+/* Desktop menu links: 14px */
+@media (min-width: 1081px) {
+  .nav-links a { font-size: 0.875rem; }
+}
